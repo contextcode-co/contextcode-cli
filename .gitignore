@@ -1,0 +1,78 @@
+# Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.out/
+lib/
+.next/
+.vite/
+.esbuild/
+.cache/
+.cache/parcel
+parcel-cache/
+*.tgz
+
+# TypeScript
+*.tsbuildinfo
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+.history/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+*.log.*.gz
+
+# Environment files (do NOT commit secrets)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.test
+.env.*.secret
+
+# Test coverage
+coverage/
+coverage-*.json
+nyc-output/
+
+# Git/CI
+/.DS_Store
+/.cache/
+.vscode-test/
+
+# Monorepo / tooling
+.turborepo/
+turbo/
+.yarn/*
+.pnpmfile.cjs
+
+# Generated context docs artifacts & agent logs
+context-docs/.agent-log/
+context-docs/*.tmp
+context-docs/*.lock
+
+# Misc
+*.pem
+*.key
+*.crt
+*.pfx
+
+# Temporary files
+*.swp
+*~

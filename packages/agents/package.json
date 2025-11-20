@@ -1,0 +1,17 @@
+{
+  "name": "@contextcode/agents",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/orchestrator.ts"
+  },
+  "dependencies": {
+    "@contextcode/core": "workspace:*",
+    "@contextcode/providers": "workspace:*",
+    "@contextcode/types": "workspace:*",
+    "zod": "^3.22.2",
+    "fs-extra": "^11.1.1"
+  }
+}
