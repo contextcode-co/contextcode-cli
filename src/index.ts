@@ -2,6 +2,8 @@ import process from "node:process";
 import { createRequire } from "node:module";
 import { runInitCommand } from "./commands/init.js";
 import { runTasksGenerateCommand } from "./commands/tasksGenerate.js";
+import { runAuthCommand } from "./commands/auth.js";
+import { runModelCommand } from "./commands/model.js";
 import { ArgError } from "./utils/args.js";
 
 const require = createRequire(import.meta.url);
@@ -36,6 +38,12 @@ async function main() {
     case "tasks":
       await handleTasks(rest);
       return;
+    case "auth":
+      await runAuthCommand(rest);
+      return;
+    case "model":
+      await runModelCommand(rest);
+      return;
     default:
       throw new ArgError(`Unknown command: ${command}`);
   }
@@ -59,7 +67,7 @@ async function handleTasks(args: string[]) {
 }
 
 function printRootHelp() {
-  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode tasks generate --from-prd <file> [options]\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
+  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode tasks generate --from-prd <file> [options]\n  contextcode auth login\n  contextcode model\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
 }
 
 function printTasksHelp() {

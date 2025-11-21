@@ -7,12 +7,11 @@ import { writeAgentLog } from "../shared/logs.js";
 import { createContextScaffold, writeJsonFileAtomic } from "@contextcode/core";
 import { loadProvider } from "@contextcode/providers";
 import { parsePrdIntoTasks } from "@contextcode/agents";
+import { readUserConfig } from "../shared/userConfig.js";
 import type { Task, TaskList } from "@contextcode/types";
 
 const flagDefinitions = [
   { name: "from-prd", type: "string" as const },
-  { name: "provider", type: "string" as const },
-  { name: "model", type: "string" as const },
   { name: "cwd", alias: "C", type: "string" as const },
   { name: "out", type: "string" as const },
   { name: "dry-run", type: "boolean" as const },
@@ -27,6 +26,7 @@ export async function runTasksGenerateCommand(argv: string[]) {
   }
 
   const { flags } = parseArgs(argv, flagDefinitions);
+  const allowPrompt = canPrompt(flags);
   const prdSource = flags.fromPrd as string | undefined;
   if (!prdSource) {
     throw new ArgError("--from-prd <file> is required");
@@ -36,7 +36,7 @@ export async function runTasksGenerateCommand(argv: string[]) {
   const targetDir = resolveWorkingDirectory(process.cwd(), cwdInput);
   await ensureDirectoryExists(targetDir);
 
-  const interactiveIndexPrompt = canPrompt(flags);
+  const interactiveIndexPrompt = allowPrompt;
   const indexRecord = await readExistingIndex(targetDir);
   let indexJson = indexRecord?.index;
 
@@ -58,9 +58,13 @@ export async function runTasksGenerateCommand(argv: string[]) {
     throw new Error("Provided PRD is empty.");
   }
 
-  const providerName = (flags.provider as string | undefined) ?? process.env.CONTEXTCODE_PROVIDER ?? "stub";
-  const provider = await loadProvider(providerName, { cwd: targetDir });
-  const modelName = (flags.model as string | undefined) ?? process.env.CONTEXTCODE_MODEL ?? "default";
+  const userConfig = await readUserConfig();
+  const providerName = (process.env.CONTEXTCODE_PROVIDER ?? userConfig.defaultProvider ?? "").trim();
+  if (!providerName) {
+    throw new Error("Provider not configured. Run `contextcode auth login` or set CONTEXTCODE_PROVIDER.");
+  }
+  const modelName = (process.env.CONTEXTCODE_MODEL ?? userConfig.defaultModel ?? "claude-sonnet-4.5").trim();
+  const provider = await loadProvider(providerName, { cwd: targetDir, interactive: allowPrompt });
 
   const taskList = await parsePrdIntoTasks({
     provider,
@@ -85,7 +89,7 @@ export async function runTasksGenerateCommand(argv: string[]) {
   const outputPath = resolveOutputPath(targetDir, contextDocsDir, flags.out as string | undefined);
 
   let shouldWrite = Boolean(flags.yes);
-  if (!shouldWrite && canPrompt(flags)) {
+  if (!shouldWrite && allowPrompt) {
     shouldWrite = await promptYesNo(`Write tasks to ${formatDisplayPath(targetDir, outputPath)}?`, true);
   }
 
@@ -107,7 +111,7 @@ export async function runTasksGenerateCommand(argv: string[]) {
 }
 
 function printHelp() {
-  console.log(`Usage: contextcode tasks generate --from-prd <file> [options]\n\nOptions:\n  --from-prd <file>   Source PRD file or - for stdin\n  --provider <name>   Provider resolver name (default: stub or CONTEXTCODE_PROVIDER)\n  --model <name>      Model identifier (default: CONTEXTCODE_MODEL or 'default')\n  -C, --cwd <path>    Target working directory\n  --out <file>        Output path for tasks.json (default: context-docs/tasks.json)\n  --dry-run           Preview without writing\n  --yes               Accept preview and write without prompting\n  --json              Print resulting JSON to stdout (combine with --yes to write)\n  -h, --help          Show this help text`);
+  console.log(`Usage: contextcode tasks generate --from-prd <file> [options]\n\nOptions:\n  --from-prd <file>   Source PRD file or - for stdin\n  -C, --cwd <path>    Target working directory\n  --out <file>        Output path for tasks.json (default: context-docs/tasks.json)\n  --dry-run           Preview without writing\n  --yes               Accept preview and write without prompting\n  --json              Print resulting JSON to stdout (combine with --yes to write)\n  -h, --help          Show this help text\n\nConfigure provider/model via:\n  contextcode auth login\n  contextcode model`);
 }
 
 function canPrompt(flags: Record<string, unknown>) {

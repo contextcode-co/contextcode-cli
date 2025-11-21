@@ -12,16 +12,47 @@ export interface AiProvider {
 export type ProviderFactoryOptions = {
   cwd?: string;
   config?: Record<string, unknown>;
+  interactive?: boolean;
   [key: string]: unknown;
 };
 
 type ProviderFactory = (options?: ProviderFactoryOptions) => Promise<AiProvider> | AiProvider;
 
 const providerFactories = new Map<string, ProviderFactory>();
+type ProviderDescriptor = {
+  name: string;
+  title: string;
+  description?: string;
+  supportsInteractiveLogin?: boolean;
+  login?: (options?: ProviderFactoryOptions) => Promise<void>;
+};
 
-export function registerProviderFactory(name: string, factory: ProviderFactory) {
+const providerDescriptors = new Map<string, ProviderDescriptor>();
+
+export function registerProviderFactory(name: string, factory: ProviderFactory, metadata?: Partial<ProviderDescriptor>) {
   const key = name.trim().toLowerCase();
   providerFactories.set(key, factory);
+  const descriptor: ProviderDescriptor = {
+    name: key,
+    title: metadata?.title ?? metadata?.name ?? name,
+    description: metadata?.description,
+    supportsInteractiveLogin: metadata?.supportsInteractiveLogin ?? Boolean(metadata?.login),
+    login: metadata?.login
+  };
+  providerDescriptors.set(key, descriptor);
+}
+
+export function listRegisteredProviders() {
+  return Array.from(providerDescriptors.values());
+}
+
+export async function runProviderLogin(name: string, options: ProviderFactoryOptions = {}) {
+  const key = name.trim().toLowerCase();
+  const entry = providerDescriptors.get(key);
+  if (!entry || !entry.login) {
+    throw new Error(`Provider ${name} does not support interactive login.`);
+  }
+  await entry.login(options);
 }
 
 export async function loadProvider(providerName: string, options: ProviderFactoryOptions = {}): Promise<AiProvider> {

@@ -10,7 +10,7 @@
       "@contextcode/core/*": ["packages/core/src/*"],
       "@contextcode/agents": ["packages/agents/src/index.ts"],
       "@contextcode/agents/*": ["packages/agents/src/*"],
-      "@contextcode/providers": ["packages/providers/src/provider.ts"],
+      "@contextcode/providers": ["packages/providers/src/index.ts"],
       "@contextcode/providers/*": ["packages/providers/src/*"],
       "@contextcode/types": ["packages/types/src/index.ts"],
       "@contextcode/types/*": ["packages/types/src/*"]
