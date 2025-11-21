@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { registerProviderFactory } from "./provider.js";
+import { registerAuthMethods } from "./authMethods.js";
 import { CREDENTIALS_FILE, loadCredential, saveOAuthCredential } from "./credentials.js";
 import type { AiProvider, Message, ProviderFactoryOptions } from "./provider.js";
 
@@ -25,6 +26,35 @@ registerProviderFactory(
     }
   }
 );
+
+registerAuthMethods(PROVIDER_ID, async () => {
+  return {
+    methods: [
+      {
+        label: "Claude Pro/Max",
+        authorize: async () => {
+          const { url, verifier } = await authorize("max");
+          return {
+            url,
+            instructions: "Paste the authorization code here:",
+            callback: async (code: string) => {
+              const credentials = await exchange(code, verifier);
+              if (credentials.type !== "success" || !credentials.access) {
+                throw new Error("Anthropic OAuth authorization failed. Try again.");
+              }
+              await saveOAuthCredential(
+                PROVIDER_ID,
+                credentials.access,
+                credentials.refresh,
+                credentials.expires
+              );
+            }
+          };
+        }
+      }
+    ]
+  };
+});
 
 async function resolveAnthropicCredential(options: ProviderFactoryOptions = {}) {
   const stored = await loadCredential(PROVIDER_ID);
@@ -50,7 +80,7 @@ async function runInteractiveConsoleAuthorization() {
   if (credentials.type !== "success" || !credentials.access) {
     throw new Error("Anthropic OAuth authorization failed. Try again.");
   }
-  console.log("✅ Successfully authenticated with Claude Pro/MAX!");
+  console.log("Successfully authenticated with Claude Pro/MAX!");
   await saveOAuthCredential(
     PROVIDER_ID,
     credentials.access,

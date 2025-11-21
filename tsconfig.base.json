@@ -12,6 +12,8 @@
       "@contextcode/agents/*": ["packages/agents/src/*"],
       "@contextcode/providers": ["packages/providers/src/index.ts"],
       "@contextcode/providers/*": ["packages/providers/src/*"],
+      "@contextcode/tui": ["packages/tui/src/index.ts"],
+      "@contextcode/tui/*": ["packages/tui/src/*"],
       "@contextcode/types": ["packages/types/src/index.ts"],
       "@contextcode/types/*": ["packages/types/src/*"]
     },

@@ -1,8 +1,8 @@
-import { selectFromList } from "../utils/select.js";
+import { runModelSelectUI } from "@contextcode/tui";
 import { readUserConfig, updateUserConfig } from "../shared/userConfig.js";
 
 const MODELS = [
-  { label: "Claude Sonnet 4.5", value: "claude-sonnet-4.5", description: "Anthropic's flagship reasoning model" }
+  { id: "claude-sonnet-4.5", name: "Claude Sonnet 4.5", description: "Claude Sonnet 4.5 — Anthropic's flagship reasoning model" }
 ];
 
 export async function runModelCommand(argv: string[]) {
@@ -16,10 +16,10 @@ export async function runModelCommand(argv: string[]) {
   }
 
   const current = await readUserConfig();
-  console.log(`Current model: ${current.defaultModel ?? "(not set)"}`);
-  const selection = await selectFromList(MODELS, "Select default model:");
-  await updateUserConfig({ defaultModel: selection.value });
-  console.log(`Default model set to ${selection.label}.`);
+  const selectedModelId = await runModelSelectUI(current.defaultModel || null, MODELS);
+  await updateUserConfig({ defaultModel: selectedModelId });
+  const selectedModel = MODELS.find((m) => m.id === selectedModelId);
+  console.log(`\nDefault model set to ${selectedModel?.name}.`);
 }
 
 function printHelp() {

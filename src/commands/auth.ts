@@ -1,6 +1,6 @@
 import { ArgError } from "../utils/args.js";
-import { listRegisteredProviders, runProviderLogin } from "@contextcode/providers";
-import { selectFromList } from "../utils/select.js";
+import { listRegisteredProviders, getProviderAuthMethods } from "@contextcode/providers";
+import { runAuthLoginUI } from "@contextcode/tui";
 import { updateUserConfig } from "../shared/userConfig.js";
 
 export async function runAuthCommand(args: string[]) {
@@ -28,19 +28,21 @@ async function handleLogin(_: string[]) {
     throw new Error("Interactive login requires a TTY session.");
   }
 
-  console.log("Select a provider to authenticate:");
-  const selection = await selectFromList(
-    providers.map((provider) => ({
-      label: provider.title,
-      value: provider.name,
-      description: provider.description
-    })),
-    "Enter provider number:"
-  );
+  const providersForUI = providers.map((p) => ({
+    id: p.name,
+    title: p.title,
+    description: p.description || ""
+  }));
 
-  await runProviderLogin(selection.value, { interactive: true });
-  await updateUserConfig({ defaultProvider: selection.value });
-  console.log(`Authentication successful. Default provider set to ${selection.label}.`);
+  const result = await runAuthLoginUI(providersForUI, getProviderAuthMethods);
+
+  const selectedProvider = providers.find((p) => p.name === result.providerId);
+  if (selectedProvider?.login) {
+    await selectedProvider.login({ interactive: true });
+  }
+
+  await updateUserConfig({ defaultProvider: result.providerId });
+  console.log(`\n✅ Authentication successful. Default provider set to ${selectedProvider?.title}.`);
 }
 
 function printAuthHelp() {
