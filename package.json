@@ -2,21 +2,35 @@
   "name": "contextcode",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "contextcode": "bin/contextcode.js"
+  },
   "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "dev": "tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:core": "tsx packages/core/src/cli-dev.ts"
   },
   "dependencies": {
+    "@contextcode/agents": "workspace:*",
+    "@contextcode/core": "workspace:*",
+    "@contextcode/providers": "workspace:*",
     "@contextcode/types": "workspace:*",
     "fs-extra": "^11.1.1",
-    "globby": "^13.1.3"
+    "globby": "^13.1.3",
+    "zod": "^3.22.2"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.15.1",
   "devDependencies": {
+    "@types/node": "^22.7.5",
+    "@types/fs-extra": "^11.0.4",
+    "tsup": "^8.3.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

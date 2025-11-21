@@ -95,38 +95,3 @@ export async function generateFeatureHeadless(opts: GenerateFeatureHeadlessOpts)
 
   return files;
 }
-
-/**
- * CLI helper when debugging
- */
-if (require.main === module) {
-  // dynamic run for dev: `tsx src/orchestrator.ts`
-  (async () => {
-    const cwd = process.cwd();
-    console.log("Running orchestrator dev at", cwd);
-    // load a local provider stub if exists at ../../providers/localProvider.ts
-    try {
-      const providers = await import("@contextcode/providers");
-      const provider: AiProvider = (providers as any).createStubProvider?.() || (providers as any).GeminiProvider?.init?.();
-      if (!provider) {
-        console.error("No provider stub found. Implement @contextcode/providers with a provider and re-run.");
-        process.exit(1);
-      }
-      const files = await generateFeatureHeadless({
-        cwd,
-        provider,
-        model: "test-model",
-        featureName: "demo-feature",
-        shortDesc: "Demo feature generated in dev mode"
-      });
-      console.log("Generated files:", Object.keys(files));
-      for (const [k, v] of Object.entries(files)) {
-        console.log("----", k);
-        console.log(v.split("\n").slice(0, 40).join("\n"));
-      }
-    } catch (err) {
-      console.error("orchestrator error:", err);
-      process.exit(1);
-    }
-  })();
-}
