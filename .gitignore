@@ -63,8 +63,7 @@ turbo/
 .pnpmfile.cjs
 
 # Generated context docs artifacts & agent logs
-context-docs
-.context-docs
+contextcode
 
 # Misc
 *.pem

@@ -8,13 +8,13 @@ export type ContextScaffold = {
 };
 
 export async function ensureDotContextDir(cwd: string) {
-  const dir = path.join(cwd, ".contextcode");
+  const dir = path.join(cwd, "contextcode");
   await fsExtra.mkdirp(dir);
   return dir;
 }
 
 export async function createContextScaffold(cwd: string): Promise<ContextScaffold> {
-  const contextDocsDir = path.join(cwd, "context-docs");
+  const contextDocsDir = path.join(cwd, "contextcode");
   const agentLogDir = path.join(contextDocsDir, ".agent-log");
   await fsExtra.mkdirp(agentLogDir);
   return { contextDocsDir, agentLogDir };
