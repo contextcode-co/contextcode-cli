@@ -6,6 +6,11 @@ import fsExtra from "fs-extra";
 export type UserConfig = {
   defaultProvider?: string;
   defaultModel?: string;
+  geminiApiKey?: string;
+  geminiModel?: string;
+  geminiEndpoint?: string;
+  geminiTemperature?: number;
+  geminiMaxOutputTokens?: number;
 };
 
 const CONFIG_DIR = path.join(os.homedir(), ".contextcode");

@@ -15,13 +15,14 @@ import {
   type ContextScaffold,
   type IndexResult
 } from "@contextcode/core";
-import { loadProvider, type TokenUsage } from "@contextcode/providers";
+import { loadProvider, type ProviderFactoryOptions, type TokenUsage } from "@contextcode/providers";
 
 export type PersistIndexOptions = {
   skipContextDocs?: boolean;
   outPaths?: string[];
   provider?: string;
   model?: string;
+  providerOptions?: ProviderFactoryOptions;
 };
 
 export type PersistIndexResult = {
@@ -84,7 +85,11 @@ export async function persistIndexResult(
     try {
       console.log(`Generating context.md with AI provider: ${options.provider}...`);
       hooks.onDocGenerationStart?.();
-      const provider = await loadProvider(options.provider, { cwd, interactive: false });
+      const provider = await loadProvider(options.provider, {
+        ...(options.providerOptions ?? {}),
+        cwd,
+        interactive: false
+      });
       const result = await generateContextWithAI(provider, index, {
         repoName,
         model: options.model

@@ -65,7 +65,11 @@ export async function runGenerateTaskCommand(argv: string[]) {
   }
   const modelName = normalize((flags.model as string | undefined) ?? process.env.CONTEXTCODE_MODEL ?? userConfig.defaultModel) ?? "claude-sonnet-4.5";
 
-  const provider = await loadProvider(providerName, { cwd: targetDir, interactive: isInteractiveSession() });
+  const provider = await loadProvider(providerName, {
+    cwd: targetDir,
+    interactive: isInteractiveSession(),
+    config: userConfig
+  });
 
   const parsed = await generateTaskPlanByAgent(provider, modelName, {
     userPrompt: taskPrompt,

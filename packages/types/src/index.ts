@@ -1,4 +1,14 @@
 import { z } from "zod";
+export {
+  GeminiConfigSchema,
+  type GeminiConfig,
+  type GeminiContent,
+  type GeminiContentPart,
+  type GeminiRequest,
+  type GeminiResponse,
+  type GeminiCandidate,
+  type GeminiUsageMetadata
+} from "./gemini";
 
 export const FeatureSchema = z.object({
   slug: z.string().min(1),

@@ -1,7 +1,7 @@
 import { ArgError } from "../utils/args.js";
-import { listRegisteredProviders, getProviderAuthMethods } from "@contextcode/providers";
+import { listRegisteredProviders, getProviderAuthMethods, loadCredential } from "@contextcode/providers";
 import { runAuthLoginUI } from "@contextcode/tui";
-import { updateUserConfig } from "../shared/userConfig.js";
+import { updateUserConfig, type UserConfig } from "../shared/userConfig.js";
 
 export async function runAuthCommand(args: string[]) {
   if (!args.length || args[0] === "--help" || args[0] === "-h") {
@@ -41,7 +41,15 @@ async function handleLogin(_: string[]) {
     await selectedProvider.login({ interactive: true });
   }
 
-  await updateUserConfig({ defaultProvider: result.providerId });
+  const configPatch: Partial<UserConfig> = { defaultProvider: result.providerId };
+  if (result.providerId === "gemini") {
+    const credential = await loadCredential("gemini");
+    if (credential?.key) {
+      configPatch.geminiApiKey = credential.key;
+    }
+  }
+
+  await updateUserConfig(configPatch);
   console.log(`\n✅ Authentication successful. Default provider set to ${selectedProvider?.title}.`);
 }
 

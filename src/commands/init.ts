@@ -54,7 +54,8 @@ export async function runInitCommand(argv: string[]) {
     skipContextDocs: !includeContextDocs,
     outPaths: resolvedExtra,
     provider: resolvedProvider,
-    model: resolvedProvider ? resolvedModel : undefined
+    model: resolvedProvider ? resolvedModel : undefined,
+    providerOptions: resolvedProvider ? { config: userConfig } : undefined
   }, {
     onDocGenerationStart: () => {
       if (docAnimationStarted) return;
@@ -95,7 +96,7 @@ export async function runInitCommand(argv: string[]) {
 }
 
 function printHelp() {
-  console.log(`Usage: contextcode init [path] [options]\n\nOptions:\n  -C, --cwd <path>        Target directory (defaults to current)\n  --out <file>            Additional output path for index.json (repeatable)\n  --no-context-docs       Skip creating context-docs scaffold\n  -p, --provider <name>   AI provider for context generation (e.g., anthropic)\n  -m, --model <model>     Model to use (e.g., claude-3-7-sonnet-20250219)\n  -y, --yes               Accept defaults silently\n  -h, --help              Show this help text`);
+  console.log(`Usage: contextcode init [path] [options]\n\nOptions:\n  -C, --cwd <path>        Target directory (defaults to current)\n  --out <file>            Additional output path for index.json (repeatable)\n  --no-context-docs       Skip creating context-docs scaffold\n  -p, --provider <name>   AI provider for context generation (e.g., anthropic | gemini)\n  -m, --model <model>     Model to use (e.g., claude-3-7-sonnet-20250219 or gemini-1.5-pro)\n  -y, --yes               Accept defaults silently\n  -h, --help              Show this help text`);
 }
 
 function printSummary(baseDir: string, stack: string[], sampleFiles: { path: string }[], outputs: string[]) {
