@@ -1,14 +1,17 @@
 import fs from "fs/promises";
 import fsExtra from "fs-extra";
 import path from "node:path";
+import React from "react";
+import { render } from "ink";
 import { parseArgs, ArgError } from "../utils/args.js";
 import { ensureDirectoryExists, resolveWorkingDirectory, readExistingIndex, buildIndexAndPersist } from "../shared/indexing.js";
-import { promptText, promptYesNo, isInteractiveSession } from "../utils/prompt.js";
+import { promptYesNo, isInteractiveSession } from "../utils/prompt.js";
 import { readUserConfig } from "../shared/userConfig.js";
 import { createContextScaffold, writeJsonFileAtomic } from "@contextcode/core";
 import { loadProvider } from "@contextcode/providers";
 import { normalizeModelForProvider, type Task } from "@contextcode/types";
 import { generateTaskPlanByAgent } from "@contextcode/agents";
+import { DescriptionPrompt } from "@contextcode/tui";
 import { writeAgentLog } from "../shared/logs.js";
 
 const flagDefinitions = [
@@ -34,9 +37,29 @@ export async function runGenerateTaskCommand(argv: string[]) {
   const promptOverride = normalize(flags.prompt as string | undefined);
   const humanNameOverride = normalize(flags.name as string | undefined);
 
+  const userConfig = await readUserConfig();
+  const providerName = normalize((flags.provider as string | undefined) ?? process.env.CONTEXTCODE_PROVIDER ?? userConfig.defaultProvider);
+  if (!providerName) {
+    throw new Error("Provider not configured. Run `contextcode auth login` first.");
+  }
+  const requestedModel = normalize((flags.model as string | undefined) ?? process.env.CONTEXTCODE_MODEL ?? userConfig.defaultModel);
+  const normalizedModel = normalizeModelForProvider(providerName, requestedModel);
+  if (normalizedModel.reason === "unknown-provider") {
+    throw new Error(`Unknown provider: ${providerName}`);
+  }
+  if (!normalizedModel.model) {
+    throw new Error(`Model missing for provider: ${providerName}`);
+  }
+  if (normalizedModel.reason === "fallback" && requestedModel) {
+    console.warn(
+      `[contextcode] Model "${requestedModel}" is not valid for provider "${providerName}". Falling back to "${normalizedModel.model}".`
+    );
+  }
+  const modelName = normalizedModel.model;
+
   let taskPrompt = promptOverride;
   if (!taskPrompt) {
-    taskPrompt = await promptText("Describe what you want to implement:");
+    taskPrompt = await promptForTaskDescription(providerName, modelName);
   }
   if (!taskPrompt) {
     throw new ArgError("A task description is required.");
@@ -57,26 +80,6 @@ export async function runGenerateTaskCommand(argv: string[]) {
 
   const repoIndex = indexRecord.index;
   const contextDocs = await readContextDocs(targetDir);
-
-  const userConfig = await readUserConfig();
-  const providerName = normalize((flags.provider as string | undefined) ?? process.env.CONTEXTCODE_PROVIDER ?? userConfig.defaultProvider);
-  if (!providerName) {
-    throw new Error("Provider not configured. Run `contextcode auth login` first.");
-  }
-  const requestedModel = normalize((flags.model as string | undefined) ?? process.env.CONTEXTCODE_MODEL ?? userConfig.defaultModel);
-  const normalizedModel = normalizeModelForProvider(providerName, requestedModel);
-  if (normalizedModel.reason === "unknown-provider") {
-    throw new Error(`Unknown provider: ${providerName}`);
-  }
-  if (!normalizedModel.model) {
-    throw new Error(`Model missing for provider: ${providerName}`);
-  }
-  if (normalizedModel.reason === "fallback" && requestedModel) {
-    console.warn(
-      `[contextcode] Model "${requestedModel}" is not valid for provider "${providerName}". Falling back to "${normalizedModel.model}".`
-    );
-  }
-  const modelName = normalizedModel.model;
 
   const provider = await loadProvider(providerName, {
     cwd: targetDir,
@@ -127,6 +130,27 @@ export async function runGenerateTaskCommand(argv: string[]) {
   writtenFiles.forEach((file) => {
     console.log(`  - ${path.relative(targetDir, file)}`);
   });
+}
+
+async function promptForTaskDescription(providerName: string, modelName: string) {
+  if (!isInteractiveSession()) {
+    throw new Error("Interactive prompt not available. Pass --prompt to provide the task description.");
+  }
+
+  let submittedValue = "";
+  const { unmount, waitUntilExit } = render(
+    React.createElement(DescriptionPrompt, {
+      provider: providerName,
+      model: modelName,
+      onSubmit: (value: string) => {
+        submittedValue = value.trim();
+        unmount();
+      }
+    })
+  );
+
+  await waitUntilExit();
+  return submittedValue;
 }
 
 function printHelp() {
