@@ -2,7 +2,7 @@ import process from "node:process";
 import { createRequire } from "node:module";
 import { runInitCommand } from "./commands/init.js";
 import { runAuthCommand } from "./commands/auth.js";
-import { runModelCommand } from "./commands/model.js";
+import { runModelCommand } from "./commands/set-model.js";
 import { runGenerateTaskCommand } from "./commands/generate-task.js";
 import { ArgError } from "./utils/args.js";
 import { runSetProviderCommand } from "./commands/set-provider.js";
@@ -44,9 +44,6 @@ async function main() {
       return;
     case "auth":
       await runAuthCommand(rest);
-      return;
-    case "model":
-      await runModelCommand(rest);
       return;
     case "set":
       await handleSet(rest);
@@ -98,6 +95,11 @@ async function handleSet(args: string[]) {
   const [subcommand, ...rest] = args;
   if (subcommand === "provider") {
     await runSetProviderCommand(rest);
+    return;
+  }
+
+  if (subcommand === "model") {
+    await runModelCommand(rest);
     return;
   }
 

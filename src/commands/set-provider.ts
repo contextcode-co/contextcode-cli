@@ -56,7 +56,7 @@ export async function runSetProviderCommand(argv: string[], options: SetProvider
 
   await persistSelection(selectedProvider.id, selectedProvider.defaultModel);
 
-  console.log(`\nDefault provider set to ${selectedProvider.title}. Default model: ${selectedProvider.defaultModel}.`);
+  console.log(`\nDefault provider set to ${selectedProvider.title}. Default model: ${selectedProvider.defaultModel}. You can change the model with: contextcode set model`);
 }
 
 function printHelp() {
