@@ -1,3 +1,7 @@
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import type { AiProvider, Message } from "@contextcode/providers";
 import { TaskListSchema, type TaskList } from "@contextcode/types";
 
@@ -18,10 +22,7 @@ export type TaskGeneratorOptions = {
 export function buildTaskGeneratorMessages({ userPrompt, indexJson, docs }: TaskGeneratorContext): Message[] {
   const system = {
     role: "system" as const,
-    content:
-      "You are an experienced Tech Lead. Reply ONLY with valid JSON that matches:\n" +
-      JSON.stringify({ summary: "string", tasks: [{ id: "string", title: "string", objective: "string", steps: ["string"], files_hint: ["string"], acceptance_criteria: ["string"] }] }) +
-      "\nRules:\n- Return between 3 and 6 tasks.\n- Each task must be small with meticulously ordered steps.\n- 'files_hint' must include relevant paths and any new files.\n- 'acceptance_criteria' must show how to validate the solution."
+    content: loadPoAgentPrompt() as string
   };
 
   const sections: string[] = [];
@@ -39,6 +40,29 @@ export function buildTaskGeneratorMessages({ userPrompt, indexJson, docs }: Task
   };
 
   return [system, user];
+}
+
+let cachedPrompt: string;
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+
+function loadPoAgentPrompt() {
+  if (cachedPrompt) return cachedPrompt;
+
+  const candidates = [
+    path.resolve(process.cwd(), "system-prompts/po-agent.txt"),
+    path.resolve(process.cwd(), "packages/agents/src/system-prompts/po-agent.txt"),
+    path.resolve(moduleDir, "./system-prompts/po-agent.txt")
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      const content = readFileSync(candidate, "utf8").trim();
+      if (content) {
+        cachedPrompt = content;
+        return cachedPrompt;
+      }
+    }
+  }
 }
 
 export async function generateTaskPlanByAgent(
