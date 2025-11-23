@@ -1,0 +1,86 @@
+import type { AiProvider, Message } from "@contextcode/providers";
+import { TaskListSchema, type TaskList } from "@contextcode/types";
+
+const DOC_SNIPPET_LIMIT = 2000;
+const MAX_TASKS = 6;
+
+export type TaskGeneratorContext = {
+  userPrompt: string;
+  indexJson: any;
+  docs: Record<string, string>;
+};
+
+export type TaskGeneratorOptions = {
+  maxTokens?: number;
+  temperature?: number;
+};
+
+export function buildTaskGeneratorMessages({ userPrompt, indexJson, docs }: TaskGeneratorContext): Message[] {
+  const system = {
+    role: "system" as const,
+    content:
+      "You are an experienced Tech Lead. Reply ONLY with valid JSON that matches:\n" +
+      JSON.stringify({ summary: "string", tasks: [{ id: "string", title: "string", objective: "string", steps: ["string"], files_hint: ["string"], acceptance_criteria: ["string"] }] }) +
+      "\nRules:\n- Return between 3 and 6 tasks.\n- Each task must be small with meticulously ordered steps.\n- 'files_hint' must include relevant paths and any new files.\n- 'acceptance_criteria' must show how to validate the solution."
+  };
+
+  const sections: string[] = [];
+  sections.push(`User request:\n${userPrompt}`);
+  sections.push(`Index summary:\n${summarizeIndex(indexJson)}`);
+
+  for (const [name, content] of Object.entries(docs)) {
+    sections.push(`${name}:\n${truncate(content, DOC_SNIPPET_LIMIT)}`);
+    if (sections.length >= MAX_TASKS + 2) break; // prevent oversized prompts
+  }
+
+  const user = {
+    role: "user" as const,
+    content: sections.join("\n\n") + "\n\nReturn only the requested JSON."
+  };
+
+  return [system, user];
+}
+
+export async function generateTaskPlanByAgent(
+  provider: AiProvider,
+  model: string,
+  context: TaskGeneratorContext,
+  options: TaskGeneratorOptions = {}
+): Promise<TaskList> {
+  const messages = buildTaskGeneratorMessages(context);
+  const response = await provider.request({
+    model,
+    messages,
+    max_tokens: options.maxTokens ?? 4096,
+    temperature: options.temperature ?? 0.2
+  });
+
+  return parseTaskListResponse(response.text);
+}
+
+function parseTaskListResponse(raw: string): TaskList {
+  const normalized = raw.trim().replace(/^```json\s*/i, "").replace(/```$/i, "");
+  const parsed = JSON.parse(normalized);
+  return TaskListSchema.parse(parsed);
+}
+
+function summarizeIndex(indexJson: any) {
+  if (!indexJson) return "(no index)";
+  const summary: string[] = [];
+  if (Array.isArray(indexJson.detectedStack) && indexJson.detectedStack.length) {
+    summary.push(`Stack: ${indexJson.detectedStack.join(", ")}`);
+  }
+  if (Array.isArray(indexJson.workspacePackages) && indexJson.workspacePackages.length) {
+    const pkgs = indexJson.workspacePackages.slice(0, 6).map((pkg: any) => `${pkg.name} (${pkg.relativeDir})`);
+    summary.push(`Packages: ${pkgs.join(", ")}`);
+  }
+  if (Array.isArray(indexJson.importantPaths) && indexJson.importantPaths.length) {
+    summary.push(`Paths: ${indexJson.importantPaths.slice(0, 6).join(", ")}`);
+  }
+  return summary.join(" | ") || "(no data)";
+}
+
+function truncate(value: string, max: number) {
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 3)}...`;
+}

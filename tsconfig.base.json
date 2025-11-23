@@ -23,6 +23,6 @@
     "resolveJsonModule": true,
     "composite": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "."
   }
 }

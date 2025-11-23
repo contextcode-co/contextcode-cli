@@ -4,7 +4,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { registerProviderFactory } from "./provider.js";
 import { registerAuthMethods } from "./authMethods.js";
 import { CREDENTIALS_FILE, loadCredential, saveOAuthCredential } from "./credentials.js";
-import type { AiProvider, Message, ProviderFactoryOptions } from "./provider.js";
+import type { AiProvider, Message, ProviderFactoryOptions, TokenUsage } from "./provider.js";
 
 const CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
 const REDIRECT_URI = "https://console.anthropic.com/oauth/code/callback";
@@ -140,7 +140,7 @@ function createAnthropicProvider(oauth: { access_token: string; refresh_token: s
       const text = Array.isArray(json.content)
         ? json.content.map((entry: any) => entry?.text ?? "").join("\n").trim()
         : String(json.content ?? "");
-      return { text };
+      return { text, usage: mapUsage(json.usage) };
     }
   };
 }
@@ -183,6 +183,21 @@ function buildAnthropicBody(model: string, messages: Message[], opts: { max_toke
     messages: conversation,
     max_tokens: opts.max_tokens,
     temperature: opts.temperature
+  };
+}
+
+function mapUsage(raw: any): TokenUsage | undefined {
+  if (!raw) return undefined;
+  const input = typeof raw.input_tokens === "number" ? raw.input_tokens : undefined;
+  const output = typeof raw.output_tokens === "number" ? raw.output_tokens : undefined;
+  const total = typeof raw.total_tokens === "number" ? raw.total_tokens : undefined;
+  if (input == null && output == null && total == null) {
+    return undefined;
+  }
+  return {
+    inputTokens: input,
+    outputTokens: output,
+    totalTokens: total ?? ((input ?? 0) + (output ?? 0) || undefined)
   };
 }
 

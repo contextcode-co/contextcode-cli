@@ -1,5 +1,5 @@
 import type { IndexResult } from "../indexer.js";
-import type { AiProvider, Message } from "@contextcode/providers";
+import type { AiProvider, Message, TokenUsage } from "@contextcode/providers";
 
 const MAX_SAMPLE_EXCERPTS = 12;
 const MAX_WORKSPACE_DETAILS = 6;
@@ -15,11 +15,16 @@ export type ContextGeneratorOptions = {
  * Uses the configured AI provider to generate a comprehensive context.md
  * from the indexed repository metadata.
  */
+export type ContextGenerationResult = {
+  markdown: string;
+  usage?: TokenUsage;
+};
+
 export async function generateContextWithAI(
   provider: AiProvider,
   index: IndexResult,
   options: ContextGeneratorOptions = {}
-): Promise<string> {
+): Promise<ContextGenerationResult> {
   const repoName = options.repoName ?? index.packageJson?.name ?? "this repository";
   const model = options.model ?? "claude-3-7-sonnet-20250219";
 
@@ -38,7 +43,10 @@ export async function generateContextWithAI(
     temperature: options.temperature ?? 0.3
   });
 
-  return cleanMarkdownResponse(response.text);
+  return {
+    markdown: cleanMarkdownResponse(response.text),
+    usage: response.usage
+  };
 }
 
 function buildSystemPrompt(): string {

@@ -4,9 +4,15 @@ import type { z } from "zod";
 
 export type Message = { role: "system" | "user" | "assistant"; content: string };
 
+export type TokenUsage = {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+};
+
 export interface AiProvider {
   name: string;
-  request(opts: { model: string; messages: Message[]; max_tokens?: number; temperature?: number }): Promise<{ text: string }>;
+  request(opts: { model: string; messages: Message[]; max_tokens?: number; temperature?: number }): Promise<{ text: string; usage?: TokenUsage }>;
 }
 
 export type ProviderFactoryOptions = {

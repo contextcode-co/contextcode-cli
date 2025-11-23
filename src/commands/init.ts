@@ -4,6 +4,7 @@ import { isGitRepository } from "../utils/git.js";
 import { buildIndexAndPersist, ensureDirectoryExists, resolveWorkingDirectory } from "../shared/indexing.js";
 import { writeAgentLog } from "../shared/logs.js";
 import { readUserConfig } from "../shared/userConfig.js";
+import type { TokenUsage } from "@contextcode/providers";
 
 const flagDefinitions = [
   { name: "cwd", alias: "C", type: "string" as const },
@@ -44,12 +45,36 @@ export async function runInitCommand(argv: string[]) {
   const extraOutputs = (flags.out as string[] | undefined) ?? [];
   const resolvedExtra = extraOutputs.map((p) => (path.isAbsolute(p) ? p : path.join(targetDir, p)));
 
-  const { index, outputs, contextScaffold } = await buildIndexAndPersist(targetDir, {
+  const indexingAnimation = animateSection("Indexing project...", INDEXING_ANIMATION_STEPS);
+  let docAnimation: Promise<void> | null = null;
+  let docAnimationStarted = false;
+  let tokenStats: TokenUsage | undefined;
+
+  const { index, outputs, contextScaffold, tokenUsage } = await buildIndexAndPersist(targetDir, {
     skipContextDocs: !includeContextDocs,
     outPaths: resolvedExtra,
     provider: resolvedProvider,
     model: resolvedProvider ? resolvedModel : undefined
+  }, {
+    onDocGenerationStart: () => {
+      if (docAnimationStarted) return;
+      docAnimationStarted = true;
+      docAnimation = animateSection("Generating documentation...", buildDocAnimationSteps(includeContextDocs));
+    },
+    onDocGenerationComplete: ({ tokenUsage: usage }) => {
+      tokenStats = usage;
+    }
   });
+
+  await indexingAnimation;
+  if (docAnimation) {
+    await docAnimation;
+  }
+
+  const usageToReport = tokenStats ?? tokenUsage;
+  if (usageToReport) {
+    printTokenCounter(usageToReport);
+  }
 
   const gitRepo = isGitRepository(targetDir);
   if (!gitRepo) {
@@ -88,4 +113,50 @@ function printSummary(baseDir: string, stack: string[], sampleFiles: { path: str
     const display = rel.startsWith("..") ? outPath : rel || ".";
     console.log(`  - ${display}`);
   }
+}
+
+const STEP_DELAY_MS = 160;
+const numberFormatter = new Intl.NumberFormat("en-US");
+const INDEXING_ANIMATION_STEPS = [
+  "✓ Scanning files...",
+  "✓ Parsing code structure",
+  "✓ Analyzing dependencies",
+  "✓ Resolving module links",
+  "✓ Generating architecture map"
+];
+
+function buildDocAnimationSteps(includeDocs: boolean): string[] {
+  if (!includeDocs) return [];
+  return [
+    "✓ Creating context.md",
+    "✓ Creating features.md",
+    "✓ Creating architecture.md",
+    "✓ Creating implementation-guide.md"
+  ];
+}
+
+function animateSection(title: string, steps: string[] | undefined | null): Promise<void> {
+  if (!steps || !steps.length) {
+    return Promise.resolve();
+  }
+  console.log(title);
+  return (async () => {
+    for (const line of steps) {
+      await delay(STEP_DELAY_MS);
+      console.log(line);
+    }
+    console.log("");
+  })();
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function printTokenCounter(usage: TokenUsage) {
+  const input = usage.inputTokens ?? 0;
+  const output = usage.outputTokens ?? 0;
+  const total = usage.totalTokens ?? input + output;
+  console.log(`Tokens used: in ${numberFormatter.format(input)} / out ${numberFormatter.format(output)} / total ${numberFormatter.format(total)}`);
+  console.log("");
 }

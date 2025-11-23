@@ -9,10 +9,13 @@ import {
   writeTextFileAtomic,
   generateContextWithAI,
   renderContextMarkdown,
+  renderFeaturesGuide,
+  renderArchitectureGuide,
+  renderImplementationGuide,
   type ContextScaffold,
   type IndexResult
 } from "@contextcode/core";
-import { loadProvider } from "@contextcode/providers";
+import { loadProvider, type TokenUsage } from "@contextcode/providers";
 
 export type PersistIndexOptions = {
   skipContextDocs?: boolean;
@@ -25,15 +28,31 @@ export type PersistIndexResult = {
   index: IndexResult;
   outputs: string[];
   contextScaffold?: ContextScaffold;
+  tokenUsage?: TokenUsage;
+};
+export type PersistHooks = {
+  onIndexingReady?: (index: IndexResult) => void;
+  onDocGenerationStart?: () => void;
+  onDocGenerationComplete?: (payload: { tokenUsage?: TokenUsage }) => void;
 };
 
-export async function buildIndexAndPersist(cwd: string, options: PersistIndexOptions = {}): Promise<PersistIndexResult> {
+export async function buildIndexAndPersist(
+  cwd: string,
+  options: PersistIndexOptions = {},
+  hooks: PersistHooks = {}
+): Promise<PersistIndexResult> {
   const index = await indexRepo(cwd);
-  const { outputs, contextScaffold } = await persistIndexResult(cwd, index, options);
-  return { index, outputs, contextScaffold };
+  hooks.onIndexingReady?.(index);
+  const { outputs, contextScaffold, tokenUsage } = await persistIndexResult(cwd, index, options, hooks);
+  return { index, outputs, contextScaffold, tokenUsage };
 }
 
-export async function persistIndexResult(cwd: string, index: IndexResult, options: PersistIndexOptions = {}) {
+export async function persistIndexResult(
+  cwd: string,
+  index: IndexResult,
+  options: PersistIndexOptions = {},
+  hooks: PersistHooks = {}
+) {
   const outputs: string[] = [];
   const seen = new Set<string>();
   const track = (p: string) => {
@@ -57,33 +76,51 @@ export async function persistIndexResult(cwd: string, index: IndexResult, option
     track(docsIndexPath);
   }
 
+  const repoName = index.packageJson?.name ?? path.basename(cwd);
   let contextMarkdown: string;
-  
+  let tokenUsage: TokenUsage | undefined;
+
   if (options.provider) {
     try {
       console.log(`Generating context.md with AI provider: ${options.provider}...`);
+      hooks.onDocGenerationStart?.();
       const provider = await loadProvider(options.provider, { cwd, interactive: false });
-      contextMarkdown = await generateContextWithAI(provider, index, {
-        repoName: path.basename(cwd),
+      const result = await generateContextWithAI(provider, index, {
+        repoName,
         model: options.model
       });
+      contextMarkdown = result.markdown;
+      tokenUsage = result.usage;
     } catch (err: any) {
       console.warn(`AI generation failed: ${err.message}. Falling back to static template.`);
-      contextMarkdown = renderContextMarkdown(index, { repoName: path.basename(cwd) });
+      contextMarkdown = renderContextMarkdown(index, { repoName });
     }
   } else {
-    contextMarkdown = renderContextMarkdown(index, { repoName: path.basename(cwd) });
+    hooks.onDocGenerationStart?.();
+    contextMarkdown = renderContextMarkdown(index, { repoName });
   }
 
-  const rootContextPath = path.join(cwd, "contextcode/context.md");
-  await writeTextFileAtomic(rootContextPath, contextMarkdown);
-  track(rootContextPath);
+  const companionDocs = [
+    { filename: "context.md", contents: contextMarkdown },
+    { filename: "features.md", contents: renderFeaturesGuide(index, { repoName }) },
+    { filename: "architecture.md", contents: renderArchitectureGuide(index, { repoName }) },
+    { filename: "implementation-guide.md", contents: renderImplementationGuide(index, { repoName }) }
+  ];
 
-  if (contextScaffold) {
-    const scaffoldContextPath = path.join(contextScaffold.contextDocsDir, "context.md");
-    await writeTextFileAtomic(scaffoldContextPath, contextMarkdown);
-    track(scaffoldContextPath);
+  for (const doc of companionDocs) {
+    const docPath = path.join(cwd, "contextcode", doc.filename);
+    await writeTextFileAtomic(docPath, doc.contents);
+    track(docPath);
+    if (contextScaffold) {
+      const scaffoldDocPath = path.join(contextScaffold.contextDocsDir, doc.filename);
+      if (scaffoldDocPath !== docPath) {
+        await writeTextFileAtomic(scaffoldDocPath, doc.contents);
+        track(scaffoldDocPath);
+      }
+    }
   }
+
+  hooks.onDocGenerationComplete?.({ tokenUsage });
 
   for (const custom of options.outPaths ?? []) {
     const resolved = path.isAbsolute(custom) ? custom : path.join(cwd, custom);
@@ -91,7 +128,7 @@ export async function persistIndexResult(cwd: string, index: IndexResult, option
     track(resolved);
   }
 
-  return { outputs, contextScaffold };
+  return { outputs, contextScaffold, tokenUsage };
 }
 
 export async function readExistingIndex(cwd: string) {

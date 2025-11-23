@@ -22,3 +22,17 @@ export async function promptYesNo(question: string, defaultYes = true) {
     rl.close();
   }
 }
+
+export async function promptText(question: string): Promise<string> {
+  if (!isInteractiveSession()) {
+    throw new Error("Interactive prompt not available. Pass --prompt to provide the task description.");
+  }
+
+  const rl = readline.createInterface({ input, output });
+  try {
+    const answer = await rl.question(`${question}\n> `);
+    return answer.trim();
+  } finally {
+    rl.close();
+  }
+}

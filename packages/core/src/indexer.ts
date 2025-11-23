@@ -35,6 +35,7 @@ export type IndexResult = {
   workspacePackages: WorkspacePackage[];
   rootScripts: RepoScript[];
   importantPaths: string[];
+  scannedFileCount: number;
 };
 
 async function readJsonSafe(p: string) {
@@ -107,7 +108,8 @@ export async function indexRepo(cwd: string): Promise<IndexResult> {
     sampleFiles,
     workspacePackages,
     rootScripts,
-    importantPaths
+    importantPaths,
+    scannedFileCount: paths.length
   };
 }
 
