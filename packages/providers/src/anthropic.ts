@@ -245,7 +245,7 @@ async function refreshToken(refreshToken: string) {
     type: "success" as const,
     refresh: json.refresh_token,
     access: json.access_token,
-    expires: Date.now() + json.expires_in * 1000
+    expires: Date.now() + json.expires_in * 100000
   };
 }
 

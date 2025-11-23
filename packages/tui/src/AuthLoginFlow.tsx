@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { render } from "ink";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, Text, render } from "ink";
+import clipboard from "clipboardy";
 import { PromptBox, Step } from "./PromptBox.js";
 import { SelectInput } from "./SelectInput.js";
 import { TextInput } from "./TextInput.js";
@@ -31,6 +32,43 @@ export function AuthLoginFlow({ providers, onProviderSelect, onComplete }: AuthL
   const [authUrl, setAuthUrl] = useState<string>("");
   const [authInstructions, setAuthInstructions] = useState<string>("");
   const [authCallback, setAuthCallback] = useState<((code: string) => Promise<void>) | null>(null);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const lastCopiedUrl = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (stage !== "code" || !authUrl) {
+      if (stage !== "code") {
+        lastCopiedUrl.current = null;
+        setCopyStatus("idle");
+      }
+      return;
+    }
+
+    if (lastCopiedUrl.current === authUrl) {
+      return;
+    }
+
+    let cancelled = false;
+
+    clipboard
+      .write(authUrl)
+      .then(() => {
+        if (!cancelled) {
+          lastCopiedUrl.current = authUrl;
+          setCopyStatus("copied");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          lastCopiedUrl.current = authUrl;
+          setCopyStatus("failed");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [stage, authUrl]);
 
   const steps: Step[] = [];
 
@@ -47,8 +85,10 @@ export function AuthLoginFlow({ providers, onProviderSelect, onComplete }: AuthL
   }
 
   if (stage === "code") {
-    steps.push({ type: "active", label: `Go to: ${authUrl}` });
-    steps.push({ type: "pending", label: authInstructions });
+    steps.push({ type: "active", label: "Open the authorization URL below" });
+    if (authInstructions) {
+      steps.push({ type: "pending", label: authInstructions });
+    }
   }
 
   const handleProviderSelect = async (providerId: string) => {
@@ -68,8 +108,10 @@ export function AuthLoginFlow({ providers, onProviderSelect, onComplete }: AuthL
     setSelectedMethodLabel(methods[methodIndex].label);
 
     const authInfo = await methods[methodIndex].authorize();
-    setAuthUrl(authInfo.url);
-    setAuthInstructions(authInfo.instructions);
+    const normalizedUrl = authInfo.url.trim();
+    const normalizedInstructions = (authInfo.instructions ?? "").trim();
+    setAuthUrl(normalizedUrl);
+    setAuthInstructions(normalizedInstructions);
     setAuthCallback(() => authInfo.callback);
     setStage("code");
   };
@@ -85,27 +127,48 @@ export function AuthLoginFlow({ providers, onProviderSelect, onComplete }: AuthL
   };
 
   return (
-    <PromptBox title="Add credential" steps={steps}>
-      {stage === "provider" && (
-        <SelectInput
-          options={providers.map((p) => ({ 
-            label: p.title, 
-            value: p.id,
-            description: p.description ? `(${p.description})` : undefined
-          }))}
-          onSelect={handleProviderSelect}
-          showSearch={providers.length > 5}
-          searchPlaceholder="Search:"
-        />
+    <Box flexDirection="column">
+      <PromptBox title="Add credential" steps={steps}>
+        {stage === "provider" && (
+          <SelectInput
+            options={providers.map((p) => ({ 
+              label: p.title, 
+              value: p.id,
+              description: p.description ? `(${p.description})` : undefined
+            }))}
+            onSelect={handleProviderSelect}
+            showSearch={providers.length > 5}
+            searchPlaceholder="Search:"
+          />
+        )}
+        {stage === "method" && (
+          <SelectInput
+            options={methods.map((m, i) => ({ label: m.label, value: String(i) }))}
+            onSelect={(val) => handleMethodSelect(Number(val))}
+          />
+        )}
+        {stage === "code" && <TextInput onSubmit={handleCodeSubmit} />}
+      </PromptBox>
+
+      {stage === "code" && authUrl && (
+        <Box flexDirection="column" marginTop={1}>
+          <Text color="cyan">Authorization URL</Text>
+          <Box marginTop={1}>
+            <Text>{authUrl}</Text>
+          </Box>
+          {copyStatus === "copied" && (
+            <Box marginTop={1}>
+              <Text color="green">Copied to clipboard. Paste it into your browser.</Text>
+            </Box>
+          )}
+          {copyStatus === "failed" && (
+            <Box marginTop={1}>
+              <Text color="yellow">Copy the URL manually if clipboard access is blocked.</Text>
+            </Box>
+          )}
+        </Box>
       )}
-      {stage === "method" && (
-        <SelectInput
-          options={methods.map((m, i) => ({ label: m.label, value: String(i) }))}
-          onSelect={(val) => handleMethodSelect(Number(val))}
-        />
-      )}
-      {stage === "code" && <TextInput onSubmit={handleCodeSubmit} />}
-    </PromptBox>
+    </Box>
   );
 }
 

@@ -6,13 +6,19 @@ import {
   createContextScaffold,
   ensureDotContextDir,
   writeJsonFileAtomic,
+  writeTextFileAtomic,
+  generateContextWithAI,
+  renderContextMarkdown,
   type ContextScaffold,
   type IndexResult
 } from "@contextcode/core";
+import { loadProvider } from "@contextcode/providers";
 
 export type PersistIndexOptions = {
   skipContextDocs?: boolean;
   outPaths?: string[];
+  provider?: string;
+  model?: string;
 };
 
 export type PersistIndexResult = {
@@ -51,6 +57,34 @@ export async function persistIndexResult(cwd: string, index: IndexResult, option
     track(docsIndexPath);
   }
 
+  let contextMarkdown: string;
+  
+  if (options.provider) {
+    try {
+      console.log(`Generating context.md with AI provider: ${options.provider}...`);
+      const provider = await loadProvider(options.provider, { cwd, interactive: false });
+      contextMarkdown = await generateContextWithAI(provider, index, {
+        repoName: path.basename(cwd),
+        model: options.model
+      });
+    } catch (err: any) {
+      console.warn(`AI generation failed: ${err.message}. Falling back to static template.`);
+      contextMarkdown = renderContextMarkdown(index, { repoName: path.basename(cwd) });
+    }
+  } else {
+    contextMarkdown = renderContextMarkdown(index, { repoName: path.basename(cwd) });
+  }
+
+  const rootContextPath = path.join(cwd, "contextcode/context.md");
+  await writeTextFileAtomic(rootContextPath, contextMarkdown);
+  track(rootContextPath);
+
+  if (contextScaffold) {
+    const scaffoldContextPath = path.join(contextScaffold.contextDocsDir, "context.md");
+    await writeTextFileAtomic(scaffoldContextPath, contextMarkdown);
+    track(scaffoldContextPath);
+  }
+
   for (const custom of options.outPaths ?? []) {
     const resolved = path.isAbsolute(custom) ? custom : path.join(cwd, custom);
     await writeJsonFileAtomic(resolved, index);
@@ -61,7 +95,7 @@ export async function persistIndexResult(cwd: string, index: IndexResult, option
 }
 
 export async function readExistingIndex(cwd: string) {
-  const indexPath = path.join(cwd, ".contextcode", "index.json");
+  const indexPath = path.join(cwd, "contextcode", "index.json");
   try {
     const raw = await fs.readFile(indexPath, "utf8");
     const index = JSON.parse(raw) as IndexResult;

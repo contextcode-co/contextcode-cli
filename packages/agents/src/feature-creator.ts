@@ -1,6 +1,5 @@
 import { FeatureSchema, type Feature } from "@contextcode/types";
 import type { AiProvider, Message } from "@contextcode/providers";
-import { z } from "zod";
 
 /**
  * Build messages for FeatureCreatorAgent.
@@ -42,9 +41,7 @@ export async function createFeatureByAgent(opts: {
   const { provider, model, indexJson, featureName, shortDesc, maxRetries = 1 } = opts;
   const messages = buildFeatureCreatorMessages(indexJson, featureName, shortDesc);
 
-  // dynamic import to avoid cycle at top-level
   const providersPkg = await import("@contextcode/providers");
-  // use zod schema from types (ensure runtime import)
   const schema = FeatureSchema;
 
   const result = await providersPkg.callProviderStrictJSON({
@@ -55,6 +52,5 @@ export async function createFeatureByAgent(opts: {
     maxRetries
   });
 
-  // result is validated by zod in callProviderStrictJSON wrapper; cast for TS
   return result as Feature;
 }

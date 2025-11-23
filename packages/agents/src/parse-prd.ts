@@ -3,7 +3,16 @@ import { callProviderStrictJSON } from "@contextcode/providers";
 import { TaskListSchema, type TaskList } from "@contextcode/types";
 
 export function buildParsePrdMessages(indexJson: unknown, prdText: string): Message[] {
-  const schemaHint = JSON.stringify({ summary: "string", tasks: [{ id: "string", title: "string", objective: "string", steps: ["string"], files_hint: ["string"], acceptance_criteria: ["string"] }] }, null, 2);
+  const schemaHint = JSON.stringify(
+    {
+      summary: "string",
+      tasks: [
+        { id: "string", title: "string", objective: "string", steps: ["string"], files_hint: ["string"], acceptance_criteria: ["string"] }
+      ]
+    },
+    null,
+    2
+  );
 
   const system: Message = {
     role: "system",

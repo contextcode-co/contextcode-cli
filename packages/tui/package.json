@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {},
   "dependencies": {
+    "clipboardy": "^5.0.1",
     "ink": "^6.5.1",
     "react": "^19.2.0"
   },

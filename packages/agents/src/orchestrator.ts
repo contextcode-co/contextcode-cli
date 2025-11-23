@@ -1,8 +1,8 @@
 import path from "path";
 import fs from "fs/promises";
 import { indexRepo } from "@contextcode/core";
-import { createFeatureByAgent } from "./featureCreator.js";
-import { splitTasksByAgent } from "./taskSplitter.js";
+import { createFeatureByAgent } from "./feature-creator.js";
+import { splitTasksByAgent } from "./task-splitter.js";
 import { renderOverviewMd, renderDomainContextMd, renderRequirementsMd, renderTaskPlanMd } from "@contextcode/core";
 import type { AiProvider } from "@contextcode/providers";
 import type { TaskPlan } from "@contextcode/types";

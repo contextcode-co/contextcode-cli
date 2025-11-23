@@ -8,7 +8,7 @@ export function buildTaskSplitterMessages(overview: string, requirements: string
   const system = {
     role: "system" as const,
     content:
-      "You are a task-splitting assistant. Output ONLY valid JSON matching: { \"tasks\": [ { \"id\":\"string\", \"title\":\"string\", \"objective\":\"string\", \"steps\":[\"string\"], \"files_hint\":[\"string\"], \"acceptance_criteria\":[\"string\"] } ] } . Each task must be implementable as a small PR (<=150 LOC). Use deterministic ids (slug-1, slug-2)."
+      'You are a task-splitting assistant. Output ONLY valid JSON matching: { "tasks": [ { "id":"string", "title":"string", "objective":"string", "steps":["string"], "files_hint":["string"], "acceptance_criteria":["string"] } ] } . Each task must be implementable as a small PR (<=150 LOC). Use deterministic ids (slug-1, slug-2).'
   };
 
   const user = {

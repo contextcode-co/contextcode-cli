@@ -1,4 +1,4 @@
-export { buildFeatureCreatorMessages, createFeatureByAgent } from "./featureCreator.js";
-export { buildTaskSplitterMessages, splitTasksByAgent } from "./taskSplitter.js";
-export { buildParsePrdMessages, parsePrdIntoTasks } from "./parsePrd.js";
+export { buildFeatureCreatorMessages, createFeatureByAgent } from "./feature-creator.js";
+export { buildTaskSplitterMessages, splitTasksByAgent } from "./task-splitter.js";
+export { buildParsePrdMessages, parsePrdIntoTasks } from "./parse-prd.js";
 export { generateFeatureHeadless } from "./orchestrator.js";
