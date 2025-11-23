@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Text } from "ink";
 
 export type Step = {
-  type: "title" | "complete" | "active" | "pending";
+  type: "title" | "complete" | "active" | "pending" | "info";
   label: string;
   value?: string;
 };
@@ -63,6 +63,20 @@ export function PromptBox({ title, steps, children, footer }: PromptBoxProps) {
               <Text>◆  </Text>
               <Text dimColor>{step.label}</Text>
             </Box>
+          )}
+          {step.type === "info" && (
+            <>
+              <Box>
+                <Text>●  </Text>
+                <Text>{step.label}</Text>
+              </Box>
+              {step.value && (
+                <Box>
+                  <Text>│  </Text>
+                  <Text>{step.value}</Text>
+                </Box>
+              )}
+            </>
           )}
           {index < steps.length - 1 && (
             <Box>

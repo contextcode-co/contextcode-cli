@@ -36,7 +36,7 @@ registerAuthMethods(PROVIDER_ID, async () => {
           const { url, verifier } = await authorize("max");
           return {
             url,
-            instructions: "Paste the authorization code here:",
+            instructions: "",
             callback: async (code: string) => {
               const credentials = await exchange(code, verifier);
               if (credentials.type !== "success" || !credentials.access) {

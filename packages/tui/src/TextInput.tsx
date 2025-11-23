@@ -20,8 +20,8 @@ export function TextInput({ placeholder = "", onSubmit }: TextInputProps) {
   });
 
   return (
-    <Box paddingLeft={1}>
-      <Text color="gray">│  </Text>
+    <Box>
+      <Text>│  </Text>
       <Text>{value || placeholder}</Text>
       <Text color="magenta">▌</Text>
     </Box>
