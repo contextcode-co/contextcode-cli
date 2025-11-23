@@ -3,7 +3,7 @@ import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { registerProviderFactory } from "./provider.js";
 import { registerAuthMethods } from "./authMethods.js";
-import { CREDENTIALS_FILE, loadCredential, saveOAuthCredential } from "./credentials.js";
+import { getCredentialsFilePath, loadCredential, saveOAuthCredential } from "./credentials.js";
 import type { AiProvider, Message, ProviderFactoryOptions, TokenUsage } from "./provider.js";
 
 const CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
@@ -87,7 +87,7 @@ async function runInteractiveConsoleAuthorization() {
     credentials.refresh,
     credentials.expires
   );
-  console.log(`Saved OAuth tokens to ${CREDENTIALS_FILE}`);
+  console.log(`Saved OAuth tokens to ${getCredentialsFilePath()}`);
   return {
     access_token: credentials.access,
     refresh_token: credentials.refresh,

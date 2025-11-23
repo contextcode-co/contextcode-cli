@@ -5,7 +5,7 @@ export const GeminiConfigSchema = z.object({
     .string()
     .min(10, "Gemini API key is required")
     .regex(/^AI[a-zA-Z0-9_-]{20,}$/i, "Gemini API keys start with 'AI' and must be at least 20 characters."),
-  model: z.string().min(1).default("gemini-1.5-pro"),
+  model: z.string().min(1).default("gemini-3-pro-preview"),
   endpoint: z.string().url().optional().default("https://generativelanguage.googleapis.com/v1beta"),
   temperature: z.number().min(0).max(2).optional(),
   maxOutputTokens: z.number().int().positive().optional()

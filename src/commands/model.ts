@@ -1,9 +1,6 @@
 import { runModelSelectUI } from "@contextcode/tui";
+import { getProviderMetadata, normalizeModelForProvider } from "@contextcode/types";
 import { readUserConfig, updateUserConfig } from "../shared/userConfig.js";
-
-const MODELS = [
-  { id: "claude-sonnet-4.5", name: "Claude Sonnet 4.5", description: "Claude Sonnet 4.5 — Anthropic's flagship reasoning model" }
-];
 
 export async function runModelCommand(argv: string[]) {
   if (argv.includes("--help") || argv.includes("-h")) {
@@ -16,10 +13,27 @@ export async function runModelCommand(argv: string[]) {
   }
 
   const current = await readUserConfig();
-  const selectedModelId = await runModelSelectUI(current.defaultModel || null, MODELS);
-  await updateUserConfig({ defaultModel: selectedModelId });
-  const selectedModel = MODELS.find((m) => m.id === selectedModelId);
-  console.log(`\nDefault model set to ${selectedModel?.name}.`);
+  const providerId = current.defaultProvider;
+  if (!providerId) {
+    throw new Error("No default provider configured. Run `contextcode set provider` first.");
+  }
+
+  const metadata = getProviderMetadata(providerId);
+  if (!metadata) {
+    throw new Error(`Unknown provider "${providerId}". Re-run \`contextcode set provider\`.`);
+  }
+
+  const normalized = normalizeModelForProvider(providerId, current.defaultModel);
+  const modelOptions = metadata.models.map((model) => ({
+    id: model.id,
+    name: model.label,
+    description: model.description
+  }));
+
+  const selectedModelId = await runModelSelectUI(normalized.model ?? null, modelOptions);
+  await updateUserConfig({ defaultProvider: providerId, defaultModel: selectedModelId });
+  const selectedModel = metadata.models.find((model) => model.id === selectedModelId);
+  console.log(`\nDefault model set to ${selectedModel?.label ?? selectedModelId}.`);
 }
 
 function printHelp() {

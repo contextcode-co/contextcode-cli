@@ -5,14 +5,14 @@ import type { GeminiConfig } from "@contextcode/types";
 import { GeminiConfigSchema, type GeminiRequest, type GeminiResponse } from "@contextcode/types";
 
 import { registerAuthMethods } from "./authMethods.js";
-import { loadCredential, saveCredential, CREDENTIALS_FILE } from "./credentials.js";
+import { loadCredential, saveCredential, getCredentialsFilePath } from "./credentials.js";
 import type { AiProvider, Message, ProviderFactoryOptions, TokenUsage } from "./provider.js";
 import { registerProviderFactory } from "./provider.js";
 
 const PROVIDER_ID = "gemini";
 const API_KEY_PORTAL = "https://aistudio.google.com/app/apikey";
 const DEFAULT_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
-const DEFAULT_MODEL = "gemini-1.5-pro";
+const DEFAULT_MODEL = "gemini-3-pro-preview";
 
 registerProviderFactory(
 	PROVIDER_ID,
@@ -22,7 +22,7 @@ registerProviderFactory(
 	},
 	{
 		title: "Google Gemini",
-		description: "Use Gemini models with an API key",
+		description: "Use Gemini 2.x/3.x models with an API key",
 		supportsInteractiveLogin: true,
 		login: async (options) => {
 			await ensureGeminiApiKey(options);
@@ -41,7 +41,7 @@ registerAuthMethods(PROVIDER_ID, async () => ({
 					callback: async (inputKey: string) => {
 						const apiKey = normalizeGeminiApiKey(inputKey);
 						await saveCredential(PROVIDER_ID, apiKey);
-						console.log(`Saved Gemini API key to ${CREDENTIALS_FILE}`);
+						console.log(`Saved Gemini API key to ${getCredentialsFilePath()}`);
 					}
 				};
 			}
@@ -134,7 +134,7 @@ async function ensureGeminiApiKey(options?: ProviderFactoryOptions) {
 		const answer = (await rl.question("Enter your Gemini API key: ")).trim();
 		const apiKey = normalizeGeminiApiKey(answer);
 		await saveCredential(PROVIDER_ID, apiKey);
-		console.log(`Saved Gemini API key to ${CREDENTIALS_FILE}`);
+		console.log(`Saved Gemini API key to ${getCredentialsFilePath()}`);
 	} finally {
 		rl.close();
 	}

@@ -2,8 +2,21 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-const CREDENTIALS_DIR = path.join(os.homedir(), ".contextcode");
-export const CREDENTIALS_FILE = path.join(CREDENTIALS_DIR, "credentials.json");
+function resolveContextcodeDir() {
+  const override = process.env.CONTEXTCODE_HOME?.trim();
+  if (override) {
+    return path.resolve(override);
+  }
+  return path.join(os.homedir(), ".contextcode");
+}
+
+export function getCredentialsDirectory() {
+  return resolveContextcodeDir();
+}
+
+export function getCredentialsFilePath() {
+  return path.join(resolveContextcodeDir(), "credentials.json");
+}
 
 export type StoredCredential = {
   provider: string;
@@ -22,7 +35,7 @@ type CredentialFile = {
 
 async function readCredentialFile(): Promise<CredentialFile> {
   try {
-    const raw = await fs.readFile(CREDENTIALS_FILE, "utf8");
+    const raw = await fs.readFile(getCredentialsFilePath(), "utf8");
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.credentials)) {
       return {
@@ -41,8 +54,8 @@ async function readCredentialFile(): Promise<CredentialFile> {
 }
 
 async function writeCredentialFile(file: CredentialFile) {
-  await fs.mkdir(CREDENTIALS_DIR, { recursive: true });
-  await fs.writeFile(CREDENTIALS_FILE, JSON.stringify(file, null, 2), "utf8");
+  await fs.mkdir(getCredentialsDirectory(), { recursive: true });
+  await fs.writeFile(getCredentialsFilePath(), JSON.stringify(file, null, 2), "utf8");
 }
 
 export async function loadCredential(provider: string): Promise<StoredCredential | null> {

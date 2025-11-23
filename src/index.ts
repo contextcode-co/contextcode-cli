@@ -5,6 +5,7 @@ import { runAuthCommand } from "./commands/auth.js";
 import { runModelCommand } from "./commands/model.js";
 import { runGenerateTaskCommand } from "./commands/generate-task.js";
 import { ArgError } from "./utils/args.js";
+import { runSetProviderCommand } from "./commands/set-provider.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version?: string };
@@ -47,6 +48,9 @@ async function main() {
     case "model":
       await runModelCommand(rest);
       return;
+    case "set":
+      await handleSet(rest);
+      return;
     default:
       throw new ArgError(`Unknown command: ${command}`);
   }
@@ -85,8 +89,23 @@ async function handleGenerate(args: string[]) {
   throw new ArgError(`Unknown generate subcommand: ${subcommand}`);
 }
 
+async function handleSet(args: string[]) {
+  if (!args.length || args[0] === "--help" || args[0] === "-h") {
+    printSetHelp();
+    return;
+  }
+
+  const [subcommand, ...rest] = args;
+  if (subcommand === "provider") {
+    await runSetProviderCommand(rest);
+    return;
+  }
+
+  throw new ArgError(`Unknown set subcommand: ${subcommand}`);
+}
+
 function printRootHelp() {
-  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode generate task [options]\n  contextcode auth login\n  contextcode model\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
+  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode generate task [options]\n  contextcode auth login\n  contextcode model\n  contextcode set provider\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
 }
 
 function printTasksHelp() {
@@ -95,6 +114,10 @@ function printTasksHelp() {
 
 function printGenerateHelp() {
   console.log("Usage:\n  contextcode generate task [options]\n\nUse --help within the command for detailed flags.");
+}
+
+function printSetHelp() {
+  console.log("Usage:\n  contextcode set provider\n\nRun an interactive TUI to pick which credentialed provider should be used by default.");
 }
 
 main().catch((err) => {

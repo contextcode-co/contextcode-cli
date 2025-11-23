@@ -1,10 +1,11 @@
 import path from "node:path";
-import { parseArgs } from "../utils/args.js";
+import { parseArgs, ArgError } from "../utils/args.js";
 import { isGitRepository } from "../utils/git.js";
 import { buildIndexAndPersist, ensureDirectoryExists, resolveWorkingDirectory } from "../shared/indexing.js";
 import { writeAgentLog } from "../shared/logs.js";
 import { readUserConfig } from "../shared/userConfig.js";
 import type { TokenUsage } from "@contextcode/providers";
+import { normalizeModelForProvider } from "@contextcode/types";
 
 const flagDefinitions = [
   { name: "cwd", alias: "C", type: "string" as const },
@@ -35,11 +36,24 @@ export async function runInitCommand(argv: string[]) {
   const providerFlag = normalize(flags.provider as string | undefined);
   const modelFlag = normalize(flags.model as string | undefined);
   const resolvedProvider = providerFlag ?? normalize(process.env.CONTEXTCODE_PROVIDER) ?? normalize(userConfig.defaultProvider);
-  const resolvedModel =
-    modelFlag ??
-    normalize(process.env.CONTEXTCODE_MODEL) ??
-    normalize(userConfig.defaultModel) ??
-    "claude-sonnet-4.5";
+  const modelFlagInput = modelFlag ?? normalize(process.env.CONTEXTCODE_MODEL) ?? normalize(userConfig.defaultModel);
+  let resolvedModel: string | undefined = modelFlagInput;
+
+  if (resolvedProvider) {
+    const normalizedModel = normalizeModelForProvider(resolvedProvider, modelFlagInput);
+    if (normalizedModel.reason === "unknown-provider") {
+      throw new ArgError(`Unknown provider: ${resolvedProvider}`);
+    }
+    if (!normalizedModel.model) {
+      throw new ArgError(`Model missing for provider: ${resolvedProvider}`);
+    }
+    if (normalizedModel.reason === "fallback" && modelFlagInput) {
+      console.warn(
+        `[contextcode] Model "${modelFlagInput}" is not valid for provider "${resolvedProvider}". Falling back to "${normalizedModel.model}".`
+      );
+    }
+    resolvedModel = normalizedModel.model;
+  }
 
   const includeContextDocs = !(flags.noContextDocs as boolean | undefined);
   const extraOutputs = (flags.out as string[] | undefined) ?? [];
@@ -96,7 +110,7 @@ export async function runInitCommand(argv: string[]) {
 }
 
 function printHelp() {
-  console.log(`Usage: contextcode init [path] [options]\n\nOptions:\n  -C, --cwd <path>        Target directory (defaults to current)\n  --out <file>            Additional output path for index.json (repeatable)\n  --no-context-docs       Skip creating context-docs scaffold\n  -p, --provider <name>   AI provider for context generation (e.g., anthropic | gemini)\n  -m, --model <model>     Model to use (e.g., claude-3-7-sonnet-20250219 or gemini-1.5-pro)\n  -y, --yes               Accept defaults silently\n  -h, --help              Show this help text`);
+  console.log(`Usage: contextcode init [path] [options]\n\nOptions:\n  -C, --cwd <path>        Target directory (defaults to current)\n  --out <file>            Additional output path for index.json (repeatable)\n  --no-context-docs       Skip creating context-docs scaffold\n  -p, --provider <name>   AI provider for context generation (e.g., anthropic | gemini)\n  -m, --model <model>     Model to use (e.g., claude-sonnet-4-5 or gemini-3-pro-preview)\n  -y, --yes               Accept defaults silently\n  -h, --help              Show this help text`);
 }
 
 function printSummary(baseDir: string, stack: string[], sampleFiles: { path: string }[], outputs: string[]) {

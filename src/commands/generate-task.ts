@@ -7,7 +7,7 @@ import { promptText, promptYesNo, isInteractiveSession } from "../utils/prompt.j
 import { readUserConfig } from "../shared/userConfig.js";
 import { createContextScaffold, writeJsonFileAtomic } from "@contextcode/core";
 import { loadProvider } from "@contextcode/providers";
-import { type Task } from "@contextcode/types";
+import { normalizeModelForProvider, type Task } from "@contextcode/types";
 import { generateTaskPlanByAgent } from "@contextcode/agents";
 import { writeAgentLog } from "../shared/logs.js";
 
@@ -63,7 +63,20 @@ export async function runGenerateTaskCommand(argv: string[]) {
   if (!providerName) {
     throw new Error("Provider not configured. Run `contextcode auth login` first.");
   }
-  const modelName = normalize((flags.model as string | undefined) ?? process.env.CONTEXTCODE_MODEL ?? userConfig.defaultModel) ?? "claude-sonnet-4.5";
+  const requestedModel = normalize((flags.model as string | undefined) ?? process.env.CONTEXTCODE_MODEL ?? userConfig.defaultModel);
+  const normalizedModel = normalizeModelForProvider(providerName, requestedModel);
+  if (normalizedModel.reason === "unknown-provider") {
+    throw new Error(`Unknown provider: ${providerName}`);
+  }
+  if (!normalizedModel.model) {
+    throw new Error(`Model missing for provider: ${providerName}`);
+  }
+  if (normalizedModel.reason === "fallback" && requestedModel) {
+    console.warn(
+      `[contextcode] Model "${requestedModel}" is not valid for provider "${providerName}". Falling back to "${normalizedModel.model}".`
+    );
+  }
+  const modelName = normalizedModel.model;
 
   const provider = await loadProvider(providerName, {
     cwd: targetDir,

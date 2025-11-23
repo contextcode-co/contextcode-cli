@@ -9,6 +9,19 @@ export {
   type GeminiCandidate,
   type GeminiUsageMetadata
 } from "./gemini";
+export {
+  ProviderCatalog,
+  ProviderMetadataSchema,
+  ProviderModelSchema,
+  ProviderIdSchema,
+  type ProviderId,
+  type ProviderMetadata,
+  type ProviderModel,
+  getProviderMetadata,
+  isModelValidForProvider,
+  normalizeModelForProvider
+} from "./providers";
+export { UserConfigSchema, type UserConfig } from "./config";
 
 export const FeatureSchema = z.object({
   slug: z.string().min(1),

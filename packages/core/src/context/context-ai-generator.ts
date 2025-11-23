@@ -26,7 +26,7 @@ export async function generateContextWithAI(
   options: ContextGeneratorOptions = {}
 ): Promise<ContextGenerationResult> {
   const repoName = options.repoName ?? index.packageJson?.name ?? "this repository";
-  const model = options.model ?? "claude-3-7-sonnet-20250219";
+  const model = options.model ?? "claude-sonnet-4-5";
 
   const systemPrompt = buildSystemPrompt();
   const userPrompt = buildUserPrompt(repoName, index);
