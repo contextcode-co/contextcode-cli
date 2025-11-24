@@ -21,3 +21,7 @@ node_modules/
 
 # Documentation (keep README, LICENSE, CONTRIBUTING)
 docs/
+
+# Keep bundled assets
+!dist/
+!dist/system-prompts/
