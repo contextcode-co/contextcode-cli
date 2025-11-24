@@ -20,7 +20,7 @@ contextcode init           # Index the current repository
 contextcode generate task  # Produce a scoped task plan from the context docs
 ```
 
-Generated artifacts live under `contextcode/` inside the target repository (for example `contextcode/context.md`, `features.md`, `architecture.md`, `implementation-guide.md`, and per-task folders).
+Generated artifacts live under `.context/` inside the target repository (for example `.context/context.md`, `features.md`, `architecture.md`, `implementation-guide.md`, and per-task folders).
 
 ## Monorepo architecture
 
@@ -33,7 +33,7 @@ contextcode/
 │   ├── providers/       # @contextcode/providers – provider registry, auth helpers, SDK glue
 │   ├── types/           # @contextcode/types – shared TypeScript types, Zod schemas, enums
 │   └── tui/             # @contextcode/tui – Ink/React components for interactive flows
-└── contextcode/         # Generated docs and agent task outputs (created by `init`/`generate`)
+└── .context/            # Generated docs and agent task outputs (created by `init`/`generate`)
 ```
 
 | Package | Purpose | Key dependencies |
@@ -67,12 +67,12 @@ Options:
 
 Outputs:
 - Repository index plus optional extra `index.json` copies (`--out`)
-- Context scaffold `contextcode/{context,features,architecture,implementation-guide}.md`
-- Agent logs under `contextcode/logs/`
+- Context scaffold `.context/{context,features,architecture,implementation-guide}.md`
+- Agent logs under `.context/.agent-log/`
 
 ### `contextcode generate task`
 
-Creates a structured implementation plan that lives under `contextcode/tasks/<slug>/`.
+Creates a structured implementation plan that lives under `.context/tasks/<slug>/`.
 
 ```
 contextcode generate task [options]
@@ -84,12 +84,10 @@ Options:
 			--provider <id>    Override provider for this run
 			--model <name>     Override model for this run
 	-y, --yes              Auto-confirm re-index prompts
-	-h, --help             Show command help
+  -h, --help             Show command help
 ```
 
-Requires an existing `contextcode/index.json`. If it is missing, the CLI can invoke `init` on your behalf (TTY only).
-
-### `contextcode auth login`
+Requires an existing `.context/index.json`. If it is missing, the CLI can invoke `init` on your behalf (TTY only).### `contextcode auth login`
 
 Launches the Ink-based login picker. Available providers are registered inside `@contextcode/providers` and must expose a `login` handler. Successful auth writes credentials to `~/.contextcode/credentials.json` and updates defaults in `~/.contextcode/config.json`.
 
@@ -157,15 +155,15 @@ src/
 ├── shared/              # indexing.ts, logs.ts, userConfig.ts
 └── utils/               # args.ts, credentials.ts, git.ts, prompt.ts, select.ts
 
-contextcode/             # Generated docs (context.md, features.md, architecture.md, implementation-guide.md)
-contextcode/tasks/       # AI-generated task folders with overview, steps, and tasks.json
+.context/                # Generated docs (context.md, features.md, architecture.md, implementation-guide.md)
+.context/tasks/          # AI-generated task folders with overview, steps, and tasks.json
 ```
 
-Refer to `contextcode/context.md`, `contextcode/architecture.md`, and `docs/providers.md` for deeper architectural notes or provider-specific instructions.
+Refer to `.context/context.md`, `.context/architecture.md`, and `docs/providers.md` for deeper architectural notes or provider-specific instructions.
 
 ## Contributing and license
 
 - See `CONTRIBUTING.md` for the full contribution workflow, code standards, and review expectations.
 - Released under the Apache License 2.0; the complete text is available in `LICENSE`.
 
-For questions, open an issue with details about your environment (Node version, provider, command invocation) and attach any relevant logs from `contextcode/logs/`.
+For questions, open an issue with details about your environment (Node version, provider, command invocation) and attach any relevant logs from `.context/.agent-log/`.

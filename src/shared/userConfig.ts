@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import { writeJsonFileAtomic } from "@contextcode/core";
 import { UserConfigSchema, normalizeModelForProvider, type UserConfig } from "@contextcode/types";
 
+export type { UserConfig };
+
 function resolveContextcodeDir() {
   const override = process.env.CONTEXTCODE_HOME?.trim();
   if (override) {

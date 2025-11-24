@@ -16,6 +16,7 @@ import {
   type IndexResult
 } from "@contextcode/core";
 import { loadProvider, type ProviderFactoryOptions, type TokenUsage } from "@contextcode/providers";
+import { CONTEXT_DIR } from "./constants.js";
 
 export type PersistIndexOptions = {
   skipContextDocs?: boolean;
@@ -113,7 +114,7 @@ export async function persistIndexResult(
   ];
 
   for (const doc of companionDocs) {
-    const docPath = path.join(cwd, "contextcode", doc.filename);
+    const docPath = path.join(cwd, CONTEXT_DIR, doc.filename);
     await writeTextFileAtomic(docPath, doc.contents);
     track(docPath);
     if (contextScaffold) {
@@ -137,7 +138,7 @@ export async function persistIndexResult(
 }
 
 export async function readExistingIndex(cwd: string) {
-  const indexPath = path.join(cwd, "contextcode", "index.json");
+  const indexPath = path.join(cwd, CONTEXT_DIR, "index.json");
   try {
     const raw = await fs.readFile(indexPath, "utf8");
     const index = JSON.parse(raw) as IndexResult;

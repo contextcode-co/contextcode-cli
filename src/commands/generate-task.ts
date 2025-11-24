@@ -7,12 +7,13 @@ import { parseArgs, ArgError } from "../utils/args.js";
 import { ensureDirectoryExists, resolveWorkingDirectory, readExistingIndex, buildIndexAndPersist } from "../shared/indexing.js";
 import { promptYesNo, isInteractiveSession } from "../utils/prompt.js";
 import { readUserConfig } from "../shared/userConfig.js";
-import { createContextScaffold, writeJsonFileAtomic } from "@contextcode/core";
+import { createContextScaffold } from "@contextcode/core";
 import { loadProvider } from "@contextcode/providers";
-import { normalizeModelForProvider, type Task } from "@contextcode/types";
+import { normalizeModelForProvider } from "@contextcode/types";
 import { generateTaskPlanByAgent } from "@contextcode/agents";
 import { DescriptionPrompt } from "@contextcode/tui";
 import { writeAgentLog } from "../shared/logs.js";
+import { CONTEXT_DIR } from "../shared/constants.js";
 
 const flagDefinitions = [
   { name: "cwd", alias: "C", type: "string" as const },
@@ -87,7 +88,7 @@ export async function runGenerateTaskCommand(argv: string[]) {
     config: userConfig
   });
 
-  const parsed = await generateTaskPlanByAgent(provider, modelName, {
+  const { raw: taskPlanMarkdown } = await generateTaskPlanByAgent(provider, modelName, {
     userPrompt: taskPrompt,
     indexJson: repoIndex,
     docs: contextDocs
@@ -102,20 +103,13 @@ export async function runGenerateTaskCommand(argv: string[]) {
   const taskDir = await resolveUniqueDir(tasksRoot, slug);
   await fsExtra.mkdirp(taskDir);
 
+  const planMarkdownFilename = `${slug}-plan.md`;
+  const planMarkdownPath = path.join(taskDir, planMarkdownFilename);
+  await fs.writeFile(planMarkdownPath, ensureTrailingNewline(taskPlanMarkdown), "utf8");
+
   const overviewPath = path.join(taskDir, "overview.md");
-  await fs.writeFile(overviewPath, renderOverviewMarkdown(humanName, taskPrompt, parsed.summary), "utf8");
 
-  const writtenFiles: string[] = [overviewPath];
-  for (let i = 0; i < parsed.tasks.length; i++) {
-    const task = parsed.tasks[i];
-    const stepPath = path.join(taskDir, formatStepFilename(i, task.title));
-    await fs.writeFile(stepPath, renderTaskMarkdown(i, task), "utf8");
-    writtenFiles.push(stepPath);
-  }
-
-  const tasksJsonPath = path.join(taskDir, "tasks.json");
-  await writeJsonFileAtomic(tasksJsonPath, parsed);
-  writtenFiles.push(tasksJsonPath);
+  const writtenFiles: string[] = [planMarkdownPath, overviewPath];
 
   await writeAgentLog(agentLogDir, "generate-task", {
     command: "generate task",
@@ -165,7 +159,7 @@ function normalize(value?: string | null) {
 
 async function readContextDocs(baseDir: string) {
   const docNames = ["context.md", "features.md", "architecture.md", "implementation-guide.md"] as const;
-  const docsDir = path.join(baseDir, "contextcode");
+  const docsDir = path.join(baseDir, CONTEXT_DIR);
   const payload: Record<string, string> = {};
   await Promise.all(
     docNames.map(async (name) => {
@@ -211,26 +205,6 @@ async function exists(p: string) {
   }
 }
 
-function renderOverviewMarkdown(name: string, prompt: string, summary: string) {
-  return `# ${name}\n\n**Original request**\n\n${prompt}\n\n## Plan summary\n\n${summary}`;
-}
-
-function renderTaskMarkdown(index: number, task: Task) {
-  const stepNumber = index + 1;
-  const lines: string[] = [];
-  lines.push(`# Step ${stepNumber}: ${task.title}`);
-  lines.push("", `**Objective:** ${task.objective}`);
-  lines.push("", "## Steps");
-  lines.push(...task.steps.map((step, idx) => `${idx + 1}. ${step}`));
-  lines.push("", "## Suggested files");
-  lines.push(...(task.files_hint?.length ? task.files_hint : ["(specify during implementation)"]).map((file) => `- ${file}`));
-  lines.push("", "## Acceptance criteria");
-  lines.push(...(task.acceptance_criteria?.length ? task.acceptance_criteria : ["(define with the team)"]).map((rule) => `- ${rule}`));
-  return lines.join("\n");
-}
-
-function formatStepFilename(index: number, title: string) {
-  const slug = slugify(title) || `step-${index + 1}`;
-  const prefix = String(index + 1).padStart(2, "0");
-  return `${prefix}-${slug}.md`;
+function ensureTrailingNewline(value: string) {
+  return value.endsWith("\n") ? value : `${value}\n`;
 }

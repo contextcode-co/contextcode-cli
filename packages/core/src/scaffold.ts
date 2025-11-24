@@ -2,19 +2,21 @@ import fs from "fs/promises";
 import path from "node:path";
 import fsExtra from "fs-extra";
 
+const CONTEXT_DIR = ".context";
+
 export type ContextScaffold = {
   contextDocsDir: string;
   agentLogDir: string;
 };
 
 export async function ensureDotContextDir(cwd: string) {
-  const dir = path.join(cwd, "contextcode");
+  const dir = path.join(cwd, CONTEXT_DIR);
   await fsExtra.mkdirp(dir);
   return dir;
 }
 
 export async function createContextScaffold(cwd: string): Promise<ContextScaffold> {
-  const contextDocsDir = path.join(cwd, "contextcode");
+  const contextDocsDir = path.join(cwd, CONTEXT_DIR);
   const agentLogDir = path.join(contextDocsDir, ".agent-log");
   await fsExtra.mkdirp(agentLogDir);
   return { contextDocsDir, agentLogDir };

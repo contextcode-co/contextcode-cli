@@ -12,7 +12,7 @@ Thank you for helping improve contextcode. This guide explains how to prepare yo
    ```bash
    pnpm install
    ```
-3. **Familiarize yourself with the monorepo layout** (see `README.md` and `contextcode/architecture.md`). Each workspace lives under `packages/<name>` and the CLI entry point is `src/index.ts`.
+3. **Familiarize yourself with the monorepo layout** (see `README.md` and `.context/architecture.md`). Each workspace lives under `packages/<name>` and the CLI entry point is `src/index.ts`.
 
 ## Local development workflow
 
@@ -27,7 +27,7 @@ Thank you for helping improve contextcode. This guide explains how to prepare yo
 
 Additional tips:
 - Use `pnpm --filter <pkg> test` if you add package-specific tests.
-- Generated assets (indexes, docs, tasks) live under `contextcode/` inside the repo you point `contextcode init` at. Avoid committing those artifacts unless explicitly requested.
+- Generated assets (indexes, docs, tasks) live under `.context/` inside the repo you point `contextcode init` at. Avoid committing those artifacts unless explicitly requested.
 - User-level configuration stays under `~/.contextcode/` and should not be added to Git.
 
 ## Coding standards
@@ -39,7 +39,7 @@ Additional tips:
 - **CLI compatibility**: every new command or flag must include help text (`--help` output) and be documented in `README.md`.
 - **TUI flows**: Ink components in `@contextcode/tui` should remain React 19 compatible and check `process.stdin/stdout` for TTY availability.
 - **Logging**: write long-running operation metadata via `writeAgentLog` so users can audit AI actions.
-- **Docs**: when command behavior changes, update `contextcode/context.md`, `docs/providers.md`, and any affected task templates so generated guidance stays correct.
+- **Docs**: when command behavior changes, update `.context/context.md`, `docs/providers.md`, and any affected task templates so generated guidance stays correct.
 
 ## Contribution workflow
 
@@ -67,7 +67,7 @@ PRs must pass CI, remain lint/type clean, and avoid unrelated formatting churn. 
 
 - Search existing issues to avoid duplicates.
 - Provide context: CLI command, full flag list, provider/model, Node/pnpm versions, and whether the command ran interactively.
-- Attach excerpts from `contextcode/logs/` or `contextcode/tasks/<slug>/tasks.json` if the problem is tied to agent output.
+- Attach excerpts from `.context/.agent-log/` or `.context/tasks/<slug>/tasks.json` if the problem is tied to agent output.
 
 ## Code of conduct
 

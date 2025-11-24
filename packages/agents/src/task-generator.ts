@@ -3,7 +3,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { AiProvider, Message } from "@contextcode/providers";
-import { TaskListSchema, type TaskList } from "@contextcode/types";
 
 const DOC_SNIPPET_LIMIT = 2000;
 const MAX_TASKS = 6;
@@ -36,7 +35,7 @@ export function buildTaskGeneratorMessages({ userPrompt, indexJson, docs }: Task
 
   const user = {
     role: "user" as const,
-    content: sections.join("\n\n") + "\n\nReturn only the requested JSON."
+    content: sections.join("\n\n") + "\n\nReturn only the requested markdown."
   };
 
   return [system, user];
@@ -72,12 +71,16 @@ function loadPoAgentPrompt() {
   throw new Error("po-agent.txt system prompt not found in any expected location");
 }
 
+export type TaskPlanResult = {
+  raw: string;
+};
+
 export async function generateTaskPlanByAgent(
   provider: AiProvider,
   model: string,
   context: TaskGeneratorContext,
   options: TaskGeneratorOptions = {}
-): Promise<TaskList> {
+): Promise<TaskPlanResult> {
   const messages = buildTaskGeneratorMessages(context);
   const response = await provider.request({
     model,
@@ -86,13 +89,12 @@ export async function generateTaskPlanByAgent(
     temperature: options.temperature ?? 0.2
   });
 
-  return parseTaskListResponse(response.text);
-}
+  const rawText = response.text ?? "";
+  if (!rawText.trim()) {
+    throw new Error("Task generator returned an empty response");
+  }
 
-function parseTaskListResponse(raw: string): TaskList {
-  const normalized = raw.trim().replace(/^```json\s*/i, "").replace(/```$/i, "");
-  const parsed = JSON.parse(normalized);
-  return TaskListSchema.parse(parsed);
+  return { raw: rawText };
 }
 
 function summarizeIndex(indexJson: any) {
