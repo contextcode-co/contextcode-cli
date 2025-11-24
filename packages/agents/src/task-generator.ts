@@ -49,20 +49,27 @@ function loadPoAgentPrompt() {
   if (cachedPrompt) return cachedPrompt;
 
   const candidates = [
-    path.resolve(process.cwd(), "system-prompts/po-agent.txt"),
-    path.resolve(process.cwd(), "packages/agents/src/system-prompts/po-agent.txt"),
-    path.resolve(moduleDir, "./system-prompts/po-agent.txt")
+    path.resolve(process.cwd(), "system-prompts", "po-agent.txt"),
+    path.resolve(process.cwd(), "packages", "agents", "src", "system-prompts", "po-agent.txt"),
+    path.resolve(moduleDir, "system-prompts", "po-agent.txt")
   ];
 
   for (const candidate of candidates) {
     if (existsSync(candidate)) {
-      const content = readFileSync(candidate, "utf8").trim();
-      if (content) {
-        cachedPrompt = content;
-        return cachedPrompt;
+      try {
+        const content = readFileSync(candidate, "utf8");
+        if (content && typeof content === "string") {
+          cachedPrompt = content.trim();
+          return cachedPrompt;
+        }
+      } catch (error) {
+        // Skip this candidate if read fails
+        continue;
       }
     }
   }
+
+  throw new Error("po-agent.txt system prompt not found in any expected location");
 }
 
 export async function generateTaskPlanByAgent(

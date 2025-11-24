@@ -1,0 +1,23 @@
+# Source files
+src/
+packages/
+
+# Config files
+tsconfig*.json
+tsup.config.ts
+pnpm-workspace.yaml
+
+# Context docs (generated)
+contextcode/
+
+# Development
+node_modules/
+.DS_Store
+*.log
+
+# Tests
+**/__tests__/
+**/*.test.ts
+
+# Documentation (keep README, LICENSE, CONTRIBUTING)
+docs/

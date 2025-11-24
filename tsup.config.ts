@@ -8,5 +8,11 @@ export default defineConfig({
   clean: true,
   dts: false,
   minify: false,
-  skipNodeModulesBundle: true
+  noExternal: [
+    "@contextcode/agents",
+    "@contextcode/core",
+    "@contextcode/providers",
+    "@contextcode/types",
+    "@contextcode/tui"
+  ]
 });

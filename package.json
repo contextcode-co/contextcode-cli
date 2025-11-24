@@ -1,7 +1,7 @@
 {
-  "name": "contextcode",
-  "version": "1.0.0",
-  "description": "",
+  "name": "contextcode-cli",
+  "version": "0.1.0",
+  "description": "AI-assisted CLI that indexes repositories, generates architecture documentation, and produces executable task plans for LLM agents",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -15,11 +15,6 @@
     "dev:core": "tsx packages/core/src/cli-dev.ts"
   },
   "dependencies": {
-    "@contextcode/agents": "workspace:*",
-    "@contextcode/core": "workspace:*",
-    "@contextcode/providers": "workspace:*",
-    "@contextcode/tui": "workspace:*",
-    "@contextcode/types": "workspace:*",
     "@types/react": "^19.2.6",
     "clipboardy": "^5.0.1",
     "fs-extra": "^11.1.1",
@@ -29,8 +24,27 @@
     "react": "^19.2.0",
     "zod": "^3.22.2"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cli",
+    "ai",
+    "llm",
+    "documentation",
+    "repository-analysis",
+    "code-indexing",
+    "task-planning",
+    "anthropic",
+    "gemini",
+    "context-generation"
+  ],
+  "author": "contextcode contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julianofirme/contextcode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/julianofirme/contextcode/issues"
+  },
+  "homepage": "https://github.com/julianofirme/contextcode#readme",
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.15.1",
   "devDependencies": {
