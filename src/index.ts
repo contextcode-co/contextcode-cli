@@ -6,6 +6,7 @@ import { runModelCommand } from "./commands/set-model.js";
 import { runGenerateTaskCommand } from "./commands/generate-task.js";
 import { ArgError } from "./utils/args.js";
 import { runSetProviderCommand } from "./commands/set-provider.js";
+import { runTaskCommand } from "./commands/task.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version?: string };
@@ -36,8 +37,8 @@ async function main() {
     case "init":
       await runInitCommand(rest);
       return;
-    case "tasks":
-      await handleTasks(rest);
+    case "task":
+      await runTaskCommand(rest);
       return;
     case "generate":
       await handleGenerate(rest);
@@ -51,22 +52,6 @@ async function main() {
     default:
       throw new ArgError(`Unknown command: ${command}`);
   }
-}
-
-async function handleTasks(args: string[]) {
-  if (!args.length || args[0] === "--help" || args[0] === "-h") {
-    printTasksHelp();
-    return;
-  }
-
-  const [subcommand, ...rest] = args;
-  if (subcommand === "generate" && rest[0] === "task") {
-    await runGenerateTaskCommand(rest.slice(1));
-    return;
-  }
-
-  printTasksHelp();
-  throw new ArgError(`Unknown tasks subcommand: ${subcommand}`);
 }
 
 async function handleGenerate(args: string[]) {
@@ -107,11 +92,7 @@ async function handleSet(args: string[]) {
 }
 
 function printRootHelp() {
-  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode generate task [options]\n  contextcode auth login\n  contextcode model\n  contextcode set provider\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
-}
-
-function printTasksHelp() {
-  console.log("'contextcode tasks' is deprecated. Use `contextcode generate task` instead.");
+  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode task [options]\n  contextcode generate task [options]\n  contextcode auth login\n  contextcode model\n  contextcode set provider\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
 }
 
 function printGenerateHelp() {

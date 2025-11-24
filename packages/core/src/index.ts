@@ -4,5 +4,7 @@ export { renderFeaturesGuide, renderArchitectureGuide, renderImplementationGuide
 export { generateContextWithAI } from "./context/context-ai-generator.js";
 export { renderOverviewMd, renderDomainContextMd, renderRequirementsMd, renderTaskPlanMd, writeFilesAtomically } from "./renderer.js";
 export { createContextScaffold, ensureDotContextDir, writeJsonFileAtomic, writeTextFileAtomic } from "./scaffold.js";
+export { getTasks } from "./tasks.js";
 export type { IndexResult, WorkspacePackage, RepoScript } from "./indexer.js";
 export type { ContextScaffold } from "./scaffold.js";
+export type { TaskFile } from "./tasks.js";

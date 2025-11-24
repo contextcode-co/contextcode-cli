@@ -8,21 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@contextcode/agents':
-        specifier: workspace:*
-        version: link:packages/agents
-      '@contextcode/core':
-        specifier: workspace:*
-        version: link:packages/core
-      '@contextcode/providers':
-        specifier: workspace:*
-        version: link:packages/providers
-      '@contextcode/tui':
-        specifier: workspace:*
-        version: link:packages/tui
-      '@contextcode/types':
-        specifier: workspace:*
-        version: link:packages/types
       '@types/react':
         specifier: ^19.2.6
         version: 19.2.6

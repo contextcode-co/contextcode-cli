@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "fs/promises";
-import { Feature, Task } from "@contextcode/types";
+import { Feature, PlanTask } from "@contextcode/types";
 
 export function renderOverviewMd(feature: Feature) {
   return feature.overview;
@@ -14,7 +14,7 @@ export function renderRequirementsMd(feature: Feature) {
   return feature.requirements || "";
 }
 
-export function renderTaskPlanMd(tasks: Task[]) {
+export function renderTaskPlanMd(tasks: PlanTask[]) {
   return tasks
     .map((t, i) => {
       const steps = t.steps.map((s, idx) => `${idx + 1}. ${s}`).join("\n");

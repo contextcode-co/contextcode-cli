@@ -3,7 +3,6 @@
   "compilerOptions": {
     "composite": true,
     "declaration": true,
-    "rootDir": "src",
     "jsx": "react",
     "moduleResolution": "bundler",
     "esModuleInterop": true,

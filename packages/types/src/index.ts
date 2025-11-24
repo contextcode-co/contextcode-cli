@@ -30,7 +30,7 @@ export const FeatureSchema = z.object({
   requirements: z.string().optional().default("")
 });
 
-export const TaskSchema = z.object({
+export const PlanTaskSchema = z.object({
   id: z.string(),
   title: z.string(),
   objective: z.string(),
@@ -40,15 +40,15 @@ export const TaskSchema = z.object({
 });
 
 export const TaskPlanSchema = z.object({
-  tasks: z.array(TaskSchema)
+  tasks: z.array(PlanTaskSchema)
 });
 
 export const TaskListSchema = z.object({
   summary: z.string().min(1),
-  tasks: z.array(TaskSchema).min(1)
+  tasks: z.array(PlanTaskSchema).min(1)
 });
 
 export type Feature = z.infer<typeof FeatureSchema>;
-export type Task = z.infer<typeof TaskSchema>;
+export type PlanTask = z.infer<typeof PlanTaskSchema>;
 export type TaskPlan = z.infer<typeof TaskPlanSchema>;
 export type TaskList = z.infer<typeof TaskListSchema>;
