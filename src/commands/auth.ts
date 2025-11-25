@@ -1,7 +1,7 @@
 import { ArgError } from "../utils/args.js";
 import { listRegisteredProviders, getProviderAuthMethods, loadCredential } from "@contextcode/providers";
 import { runAuthLoginUI } from "@contextcode/tui";
-import { updateUserConfig, type UserConfig } from "../shared/userConfig.js";
+import { updateUserConfig, type UserConfig } from "../shared/user-config.js";
 
 export async function runAuthCommand(args: string[]) {
   if (!args.length || args[0] === "--help" || args[0] === "-h") {
@@ -41,7 +41,7 @@ async function handleLogin(_: string[]) {
     await selectedProvider.login({ interactive: true });
   }
 
-  const configPatch: Partial<UserConfig> = { defaultProvider: result.providerId };
+  const configPatch: Partial<UserConfig> = { defaultProvider: result.providerId as "anthropic" | "gemini" };
   if (result.providerId === "gemini") {
     const credential = await loadCredential("gemini");
     if (credential?.key) {
