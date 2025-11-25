@@ -1,5 +1,5 @@
 import path from "node:path";
-import { writeJsonFileAtomic } from "@contextcode/core";
+import { writeJsonFileAtomic } from "../utils/json";
 
 export async function writeAgentLog(agentLogDir: string, prefix: string, payload: unknown) {
   const timestamp = Date.now();

@@ -1,9 +1,9 @@
 import React from "react";
 import { render } from "ink";
 import { TaskSelector, type TaskListItem } from "@contextcode/tui";
-import { getTasks, type TaskFile } from "@contextcode/core";
+import { getTasks, type TaskFile } from "../shared/tasks";
 import { parseArgs } from "../utils/args.js";
-import { resolveWorkingDirectory } from "../shared/indexing.js";
+import { resolveWorkingDirectory } from "../utils/json.js";
 import { isInteractiveSession } from "../utils/prompt.js";
 import { copyToClipboard } from "../utils/clipboard.js";
 
