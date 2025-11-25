@@ -37,7 +37,7 @@ async function main() {
     case "init":
       await runInitCommand(rest);
       return;
-    case "task":
+    case "tasks":
       await runTaskCommand(rest);
       return;
     case "generate":
