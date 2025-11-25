@@ -8,7 +8,8 @@ import type {
   ModuleMap,
   WorkspacePackage,
   StackTechnology,
-  SpecialFile
+  SpecialFile,
+  CodeInsights
 } from "@contextcode/types";
 import { detectStack } from "./stack-detector.js";
 import {
@@ -23,6 +24,11 @@ import {
   extractDependencies
 } from "./keyword-extractor.js";
 import { findSpecialFiles } from "./special-files.js";
+import {
+  discoverKeyPatterns,
+  findEntryPoints,
+  findConfigurationPatterns
+} from "./ripgrep-search.js";
 
 const MAX_FILE_SIZE = 500 * 1024; // 500KB
 const MAX_KEYWORD_CONTENT_SIZE = 50 * 1024; // 50KB for keyword extraction
@@ -146,6 +152,9 @@ export async function buildRepositoryIndex(config: IndexerConfig): Promise<Repos
   console.log("[indexer] Grouping files into modules...");
   const modules = buildModuleMap(fileMetadata, targetDir);
 
+  console.log("[indexer] Discovering code patterns with ripgrep...");
+  const codeInsights = await discoverCodeInsights(targetDir);
+
   return {
     detectedStack,
     workspacePackages,
@@ -153,10 +162,34 @@ export async function buildRepositoryIndex(config: IndexerConfig): Promise<Repos
     modules,
     fileMetadata,
     specialFiles,
+    codeInsights,
     ignoredPatterns: allIgnorePatterns,
     totalFiles: processedCount,
     indexedAt: new Date().toISOString()
   };
+}
+
+async function discoverCodeInsights(targetDir: string): Promise<CodeInsights> {
+  try {
+    const [entryPoints, patterns, configPatterns] = await Promise.all([
+      findEntryPoints(targetDir),
+      discoverKeyPatterns(targetDir),
+      findConfigurationPatterns(targetDir)
+    ]);
+
+    return {
+      entryPoints,
+      patterns,
+      configPatterns
+    };
+  } catch (error) {
+    console.warn("[indexer] Failed to discover code patterns:", error);
+    return {
+      entryPoints: [],
+      patterns: [],
+      configPatterns: []
+    };
+  }
 }
 
 async function discoverWorkspacePackages(targetDir: string): Promise<WorkspacePackage[]> {
@@ -391,6 +424,64 @@ export function summarizeIndexForAI(index: RepositoryIndex): string {
       lines.push("```");
       lines.push("");
     });
+  }
+
+  // Code insights from pattern matching
+  if (index.codeInsights) {
+    const insights = index.codeInsights;
+
+    // Entry points
+    if (insights.entryPoints.length > 0) {
+      lines.push("## Entry Points");
+      insights.entryPoints.slice(0, 10).forEach(ep => {
+        lines.push(`- ${ep}`);
+      });
+      lines.push("");
+    }
+
+    // Key patterns discovered
+    if (insights.patterns.length > 0) {
+      lines.push("## Key Code Patterns");
+      insights.patterns.forEach(pattern => {
+        lines.push(`### ${pattern.description} (${pattern.matches.length} matches)`);
+
+        // Group matches by file
+        const fileGroups = new Map<string, typeof pattern.matches>();
+        pattern.matches.forEach(match => {
+          const existing = fileGroups.get(match.path) || [];
+          existing.push(match);
+          fileGroups.set(match.path, existing);
+        });
+
+        // Show top 5 files with most matches
+        const sortedFiles = Array.from(fileGroups.entries())
+          .sort((a, b) => b[1].length - a[1].length)
+          .slice(0, 5);
+
+        sortedFiles.forEach(([filePath, matches]) => {
+          lines.push(`  - ${filePath} (${matches.length} occurrences)`);
+          // Show first 3 matches from this file
+          matches.slice(0, 3).forEach(m => {
+            const preview = m.line.trim().slice(0, 80);
+            lines.push(`    L${m.lineNumber}: ${preview}${m.line.length > 80 ? "..." : ""}`);
+          });
+        });
+        lines.push("");
+      });
+    }
+
+    // Configuration patterns
+    if (insights.configPatterns.length > 0) {
+      lines.push("## Configuration Patterns");
+      insights.configPatterns.forEach(pattern => {
+        lines.push(`### ${pattern.description}`);
+        const uniqueFiles = new Set(pattern.matches.map(m => m.path));
+        uniqueFiles.forEach(file => {
+          lines.push(`  - ${file}`);
+        });
+        lines.push("");
+      });
+    }
   }
 
   // Important modules

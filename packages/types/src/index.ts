@@ -28,6 +28,9 @@ export {
   ModuleMapSchema,
   WorkspacePackageSchema,
   SpecialFileSchema,
+  PatternMatchSchema,
+  PatternSearchResultSchema,
+  CodeInsightsSchema,
   RepositoryIndexSchema,
   IndexerConfigSchema,
   type StackTechnology,
@@ -35,6 +38,9 @@ export {
   type ModuleMap,
   type WorkspacePackage,
   type SpecialFile,
+  type PatternMatch,
+  type PatternSearchResult,
+  type CodeInsights,
   type RepositoryIndex,
   type IndexerConfig
 } from "./indexer";

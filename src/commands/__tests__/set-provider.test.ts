@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { runSetProviderCommand } from "../set-provider.js";
-import { readUserConfig } from "../../shared/userConfig.js";
+import { readUserConfig } from "../../shared/user-config.js";
 import { getCredentialsFilePath } from "@contextcode/providers";
 
 const GEMINI_DEFAULT_MODEL = "gemini-3-pro-preview";

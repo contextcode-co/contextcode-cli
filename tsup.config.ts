@@ -25,6 +25,7 @@ export default defineConfig({
     mkdirSync(destDir, { recursive: true });
     copyFileSync(join(sourceDir, "po-agent.txt"), join(destDir, "po-agent.txt"));
     copyFileSync(join(sourceDir, "indexer-agent.txt"), join(destDir, "indexer-agent.txt"));
+    copyFileSync(join(sourceDir, "analyzer-agent.txt"), join(destDir, "analyzer-agent.txt"));
     console.log("✓ Copied system-prompts to dist/");
   }
 });
