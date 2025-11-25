@@ -158,7 +158,7 @@ function buildGeminiRequest(messages: Message[], overrides: { temperature?: numb
 	const conversation = messages
 		.filter((msg) => msg.role !== "system")
 		.map((msg) => ({
-			role: msg.role === "assistant" ? "model" : "user",
+			role: (msg.role === "assistant" ? "model" : "user") as "model" | "user",
 			parts: [{ text: msg.content }]
 		}));
 
