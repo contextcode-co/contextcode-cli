@@ -4,13 +4,12 @@ import path from "node:path";
 import React from "react";
 import { render } from "ink";
 import { parseArgs, ArgError } from "../utils/args.js";
-import { ensureDirectoryExists, resolveWorkingDirectory, readExistingIndex, buildIndexAndPersist } from "../shared/indexing.js";
 import { promptYesNo, isInteractiveSession } from "../utils/prompt.js";
-import { readUserConfig } from "../shared/userConfig.js";
-import { createContextScaffold } from "@contextcode/core";
+import { readUserConfig } from "../shared/user-config.js";
+import { createContextScaffold, resolveWorkingDirectory, ensureDirectoryExists } from "../utils/json.js";
 import { loadProvider } from "@contextcode/providers";
 import { normalizeModelForProvider } from "@contextcode/types";
-import { generateTaskPlanByAgent } from "@contextcode/agents";
+import { generateTaskPlanByAgent, buildRepositoryIndex } from "@contextcode/agents";
 import { DescriptionPrompt } from "@contextcode/tui";
 import { writeAgentLog } from "../shared/logs.js";
 import { CONTEXT_DIR } from "../shared/constants.js";
@@ -66,20 +65,14 @@ export async function runGenerateTaskCommand(argv: string[]) {
     throw new ArgError("A task description is required.");
   }
 
-  let indexRecord = await readExistingIndex(targetDir);
-  if (!indexRecord) {
-    if (!isInteractiveSession()) {
-      throw new Error("Repository index not found. Run `contextcode init` first.");
-    }
-    const shouldScan = await promptYesNo("No index found. Run `contextcode init` now?", true);
-    if (!shouldScan) {
-      throw new Error("Index is required to generate tasks. Run `contextcode init` first.");
-    }
-    const scanResult = await buildIndexAndPersist(targetDir);
-    indexRecord = { index: scanResult.index, path: scanResult.outputs?.[0] ?? "" };
-  }
+  console.log("[contextcode] Analyzing repository...");
+  const repoIndex = await buildRepositoryIndex({
+    targetDir,
+    ignorePatterns: [],
+    maxFiles: 10000,
+    includeTests: false
+  });
 
-  const repoIndex = indexRecord.index;
   const contextDocs = await readContextDocs(targetDir);
 
   const provider = await loadProvider(providerName, {
