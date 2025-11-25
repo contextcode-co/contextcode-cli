@@ -1,6 +1,6 @@
 {
   "name": "contextcode-cli",
-  "version": "0.1.2",
+  "version": "0.2.2",
   "description": "AI-assisted CLI that indexes repositories, generates architecture documentation, and produces executable task plans for LLM agents",
   "type": "module",
   "main": "dist/index.js",
