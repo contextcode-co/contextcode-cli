@@ -1,11 +1,14 @@
 import path from "node:path";
+import fs from "fs/promises";
 import { parseArgs, ArgError } from "../utils/args.js";
 import { isGitRepository } from "../utils/git.js";
-import { buildIndexAndPersist, ensureDirectoryExists, resolveWorkingDirectory } from "../shared/indexing.js";
 import { writeAgentLog } from "../shared/logs.js";
-import { readUserConfig } from "../shared/userConfig.js";
-import type { TokenUsage } from "@contextcode/providers";
+import { readUserConfig } from "../shared/user-config.js";
 import { normalizeModelForProvider } from "@contextcode/types";
+import { buildRepositoryIndex, generateContextDocs } from "@contextcode/agents";
+import { loadProvider } from "@contextcode/providers";
+import { isInteractiveSession } from "../utils/prompt.js";
+import { CONTEXT_DIR } from "../shared/constants.js";
 
 const flagDefinitions = [
   { name: "cwd", alias: "C", type: "string" as const },
@@ -23,9 +26,6 @@ export async function runInitCommand(argv: string[]) {
   }
 
   const { flags, positionals } = parseArgs(argv, flagDefinitions);
-  const cwdInput = (flags.cwd as string | undefined) ?? positionals[0];
-  const targetDir = resolveWorkingDirectory(process.cwd(), cwdInput);
-  await ensureDirectoryExists(targetDir);
 
   const userConfig = await readUserConfig();
   const normalize = (value?: string) => {
@@ -33,6 +33,14 @@ export async function runInitCommand(argv: string[]) {
     const trimmed = value.trim();
     return trimmed.length ? trimmed : undefined;
   };
+
+  const cwdFlag = normalize(flags.cwd as string | undefined);
+  const targetDir = positionals[0]
+    ? path.resolve(process.cwd(), positionals[0])
+    : cwdFlag
+    ? path.resolve(process.cwd(), cwdFlag)
+    : process.cwd();
+
   const providerFlag = normalize(flags.provider as string | undefined);
   const modelFlag = normalize(flags.model as string | undefined);
   const resolvedProvider = providerFlag ?? normalize(process.env.CONTEXTCODE_PROVIDER) ?? normalize(userConfig.defaultProvider);
@@ -55,123 +63,76 @@ export async function runInitCommand(argv: string[]) {
     resolvedModel = normalizedModel.model;
   }
 
-  const includeContextDocs = !(flags.noContextDocs as boolean | undefined);
-  const extraOutputs = (flags.out as string[] | undefined) ?? [];
-  const resolvedExtra = extraOutputs.map((p) => (path.isAbsolute(p) ? p : path.join(targetDir, p)));
+  // Check if git repository
+  const isGit = isGitRepository(targetDir);
+  if (!isGit) {
+    console.warn("[contextcode] Warning: Not a git repository. Some features may be limited.");
+  }
 
-  const indexingAnimation = animateSection("Indexing project...", INDEXING_ANIMATION_STEPS);
-  let docAnimation: Promise<void> | null = null;
-  let docAnimationStarted = false;
-  let tokenStats: TokenUsage | undefined;
+  console.log(`[contextcode] Indexing repository at ${targetDir}...`);
 
-  const { index, outputs, contextScaffold, tokenUsage } = await buildIndexAndPersist(targetDir, {
-    skipContextDocs: !includeContextDocs,
-    outPaths: resolvedExtra,
-    provider: resolvedProvider,
-    model: resolvedProvider ? resolvedModel : undefined,
-    providerOptions: resolvedProvider ? { config: userConfig } : undefined
-  }, {
-    onDocGenerationStart: () => {
-      if (docAnimationStarted) return;
-      docAnimationStarted = true;
-      docAnimation = animateSection("Generating documentation...", buildDocAnimationSteps(includeContextDocs));
-    },
-    onDocGenerationComplete: ({ tokenUsage: usage }) => {
-      tokenStats = usage;
-    }
+  // Build the repository index using intelligent tools
+  const index = await buildRepositoryIndex({
+    targetDir,
+    ignorePatterns: [],
+    maxFiles: 10000,
+    includeTests: false
   });
 
-  await indexingAnimation;
-  if (docAnimation) {
-    await docAnimation;
-  }
+  // Create .context/ directory
+  const contextDir = path.join(targetDir, CONTEXT_DIR);
+  await fs.mkdir(contextDir, { recursive: true });
 
-  const usageToReport = tokenStats ?? tokenUsage;
-  if (usageToReport) {
-    printTokenCounter(usageToReport);
-  }
+  console.log("\n✓ Repository analysis complete!");
+  console.log(`  Detected stack: ${index.detectedStack.map(s => s.name).join(", ") || "none"}`);
+  console.log(`  Workspace packages: ${index.workspacePackages.length}`);
+  console.log(`  Indexed files: ${index.totalFiles}`);
+  console.log(`  Important modules: ${index.modules.length}`);
 
-  const gitRepo = isGitRepository(targetDir);
-  if (!gitRepo) {
-    console.warn(`⚠️  ${targetDir} is not a git repository. Some workflows may expect one.`);
-  }
+  // Write agent log
+  const agentLogDir = path.join(contextDir, ".agent-log");
+  await fs.mkdir(agentLogDir, { recursive: true });
+  await writeAgentLog(agentLogDir, "init", {
+    command: "init",
+    targetDir: path.relative(process.cwd(), targetDir),
+    detectedStack: index.detectedStack.map(s => s.name),
+    totalFiles: index.totalFiles,
+    workspacePackages: index.workspacePackages.length
+  });
 
-  if (contextScaffold) {
-    await writeAgentLog(contextScaffold.agentLogDir, "init", {
-      command: "init",
-      cwd: targetDir,
-      detectedStack: index.detectedStack,
-      sampleCount: index.sampleFiles.length,
-      outputs
-    });
-  }
+  // Generate context docs with AI if provider is configured
+  if (!flags["no-context-docs"]) {
+    if (resolvedProvider && resolvedModel) {
+      console.log("\n[contextcode] Generating context documentation with AI...");
 
-  printSummary(targetDir, index.detectedStack, index.sampleFiles.slice(0, 5), outputs);
+      try {
+        const provider = await loadProvider(resolvedProvider, {
+          cwd: targetDir,
+          interactive: isInteractiveSession(),
+          config: userConfig
+        });
+
+        const docs = await generateContextDocs(provider, resolvedModel, {
+          targetDir,
+          includeTests: false
+        });
+
+        // Write context docs
+        await fs.writeFile(path.join(contextDir, "context.md"), docs, "utf8");
+
+        console.log("\n✓ Context documentation generated:");
+        console.log(`  - ${CONTEXT_DIR}/context.md`);
+      } catch (error: any) {
+        console.error(`\n✗ Failed to generate context docs: ${error.message}`);
+        console.error("  The repository index was created successfully, but AI doc generation failed.");
+      }
+    } else {
+      console.log("\n[contextcode] Skipping context doc generation (no provider configured).");
+      console.log("Run `contextcode auth login` and `contextcode set provider` to enable AI-powered docs.");
+    }
+  }
 }
 
 function printHelp() {
   console.log(`Usage: contextcode init [path] [options]\n\nOptions:\n  -C, --cwd <path>        Target directory (defaults to current)\n  --out <file>            Additional output path for index.json (repeatable)\n  --no-context-docs       Skip creating context-docs scaffold\n  -p, --provider <name>   AI provider for context generation (e.g., anthropic | gemini)\n  -m, --model <model>     Model to use (e.g., claude-sonnet-4-5 or gemini-3-pro-preview)\n  -y, --yes               Accept defaults silently\n  -h, --help              Show this help text`);
-}
-
-function printSummary(baseDir: string, stack: string[], sampleFiles: { path: string }[], outputs: string[]) {
-  console.log(`Indexed repository: ${baseDir}`);
-  console.log(`Detected stack: ${stack.length ? stack.join(", ") : "(none)"}`);
-  if (sampleFiles.length) {
-    console.log("Sample files:");
-    for (const file of sampleFiles) {
-      console.log(`  - ${file.path}`);
-    }
-  }
-  console.log("Index written to:");
-  for (const outPath of outputs) {
-    const rel = path.relative(baseDir, outPath);
-    const display = rel.startsWith("..") ? outPath : rel || ".";
-    console.log(`  - ${display}`);
-  }
-}
-
-const STEP_DELAY_MS = 160;
-const numberFormatter = new Intl.NumberFormat("en-US");
-const INDEXING_ANIMATION_STEPS = [
-  "✓ Scanning files...",
-  "✓ Parsing code structure",
-  "✓ Analyzing dependencies",
-  "✓ Resolving module links",
-  "✓ Generating architecture map"
-];
-
-function buildDocAnimationSteps(includeDocs: boolean): string[] {
-  if (!includeDocs) return [];
-  return [
-    "✓ Creating context.md",
-    "✓ Creating features.md",
-    "✓ Creating architecture.md",
-    "✓ Creating implementation-guide.md"
-  ];
-}
-
-function animateSection(title: string, steps: string[] | undefined | null): Promise<void> {
-  if (!steps || !steps.length) {
-    return Promise.resolve();
-  }
-  console.log(title);
-  return (async () => {
-    for (const line of steps) {
-      await delay(STEP_DELAY_MS);
-      console.log(line);
-    }
-    console.log("");
-  })();
-}
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function printTokenCounter(usage: TokenUsage) {
-  const input = usage.inputTokens ?? 0;
-  const output = usage.outputTokens ?? 0;
-  const total = usage.totalTokens ?? input + output;
-  console.log(`Tokens used: in ${numberFormatter.format(input)} / out ${numberFormatter.format(output)} / total ${numberFormatter.format(total)}`);
-  console.log("");
 }

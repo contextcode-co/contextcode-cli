@@ -22,6 +22,22 @@ export {
   normalizeModelForProvider
 } from "./providers";
 export { UserConfigSchema, type UserConfig } from "./config";
+export {
+  StackTechnologySchema,
+  FileMetadataSchema,
+  ModuleMapSchema,
+  WorkspacePackageSchema,
+  SpecialFileSchema,
+  RepositoryIndexSchema,
+  IndexerConfigSchema,
+  type StackTechnology,
+  type FileMetadata,
+  type ModuleMap,
+  type WorkspacePackage,
+  type SpecialFile,
+  type RepositoryIndex,
+  type IndexerConfig
+} from "./indexer";
 
 export const FeatureSchema = z.object({
   slug: z.string().min(1),
