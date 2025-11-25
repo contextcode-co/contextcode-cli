@@ -1,7 +1,6 @@
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { writeJsonFileAtomic } from "@contextcode/core";
 import { UserConfigSchema, normalizeModelForProvider, type UserConfig } from "@contextcode/types";
 
 export type { UserConfig };
@@ -45,7 +44,6 @@ export async function readUserConfig(): Promise<UserConfig> {
   const correction = tryAutoCorrectConfig(parsedJson);
   if (correction) {
     console.warn(`[contextcode] ${correction.message}`);
-    await writeJsonFileAtomic(filePath, correction.config);
     await secureConfigPermissions(filePath);
     return correction.config;
   }
@@ -70,7 +68,6 @@ export function getConfigPath() {
 async function persistConfig(config: Partial<UserConfig>, onAutoCorrect?: (message: string) => void) {
   const normalized = normalizeConfigForWrite(config, onAutoCorrect);
   const filePath = getConfigFilePathInternal();
-  await writeJsonFileAtomic(filePath, normalized);
   await secureConfigPermissions(filePath);
   return normalized;
 }
