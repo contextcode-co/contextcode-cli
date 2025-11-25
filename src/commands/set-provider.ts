@@ -1,5 +1,5 @@
 import { runProviderSelectUI } from "@contextcode/tui";
-import { readUserConfig, updateUserConfig } from "../shared/userConfig.js";
+import { readUserConfig, updateUserConfig } from "../shared/user-config.js";
 import { isInteractiveSession } from "../utils/prompt.js";
 import { loadCredentialProviders, type CredentialProvider } from "../utils/credentials.js";
 

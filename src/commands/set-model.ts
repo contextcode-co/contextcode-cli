@@ -1,6 +1,6 @@
 import { runModelSelectUI } from "@contextcode/tui";
 import { getProviderMetadata, normalizeModelForProvider } from "@contextcode/types";
-import { readUserConfig, updateUserConfig } from "../shared/userConfig.js";
+import { readUserConfig, updateUserConfig } from "../shared/user-config.js";
 
 export async function runModelCommand(argv: string[]) {
   if (argv.includes("--help") || argv.includes("-h")) {
