@@ -13,19 +13,18 @@ export default defineConfig({
   minify: false,
   noExternal: [
     "@contextcode/agents",
-    "@contextcode/core",
     "@contextcode/providers",
     "@contextcode/types",
     "@contextcode/tui"
   ],
   onSuccess: async () => {
     // Copy system-prompts to dist
-    const sourcePrompt = "packages/agents/src/system-prompts/po-agent.txt";
+    const sourceDir = "packages/agents/src/system-prompts";
     const destDir = "dist/system-prompts";
-    const destFile = join(destDir, "po-agent.txt");
-    
+
     mkdirSync(destDir, { recursive: true });
-    copyFileSync(sourcePrompt, destFile);
+    copyFileSync(join(sourceDir, "po-agent.txt"), join(destDir, "po-agent.txt"));
+    copyFileSync(join(sourceDir, "indexer-agent.txt"), join(destDir, "indexer-agent.txt"));
     console.log("✓ Copied system-prompts to dist/");
   }
 });
