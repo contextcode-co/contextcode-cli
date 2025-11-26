@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
-import { getCredentialsFilePath } from "@contextcode/providers";
-import { ProviderCatalog, type ProviderMetadata, type ProviderId } from "@contextcode/types";
+import { getCredentialsFilePath } from "src/providers";
+import { ProviderCatalog, ProviderId, ProviderMetadata } from "src/types";
 
 export type CredentialProvider = Pick<ProviderMetadata, "title" | "description" | "defaultModel" | "models"> & {
   id: ProviderId;

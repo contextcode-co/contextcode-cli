@@ -5,7 +5,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { runSetProviderCommand } from "../set-provider.js";
 import { readUserConfig } from "../../shared/user-config.js";
-import { getCredentialsFilePath } from "@contextcode/providers";
+import { getCredentialsFilePath } from "src/providers/src/index.js";
 
 const GEMINI_DEFAULT_MODEL = "gemini-3-pro-preview";
 const ANTHROPIC_DEFAULT_MODEL = "claude-sonnet-4-5";

@@ -1,8 +1,7 @@
 import React from "react";
 import { Text } from "ink";
+import { PromptBox, SelectInput } from "..";
 
-import { PromptBox } from "../PromptBox.js";
-import { SelectInput } from "../SelectInput.js";
 
 export type TaskListItem = {
   label: string;

@@ -5,18 +5,6 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "types": ["node"],
-    "paths": {
-      "@contextcode/core": ["packages/core/src/index.ts"],
-      "@contextcode/core/*": ["packages/core/src/*"],
-      "@contextcode/agents": ["packages/agents/src/index.ts"],
-      "@contextcode/agents/*": ["packages/agents/src/*"],
-      "@contextcode/providers": ["packages/providers/src/index.ts"],
-      "@contextcode/providers/*": ["packages/providers/src/*"],
-      "@contextcode/tui": ["packages/tui/src/index.ts"],
-      "@contextcode/tui/*": ["packages/tui/src/*"],
-      "@contextcode/types": ["packages/types/src/index.ts"],
-      "@contextcode/types/*": ["packages/types/src/*"]
-    },
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

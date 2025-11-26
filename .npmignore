@@ -5,10 +5,9 @@ packages/
 # Config files
 tsconfig*.json
 tsup.config.ts
-pnpm-workspace.yaml
 
 # Context docs (generated)
-contextcode/
+.context/
 
 # Development
 node_modules/

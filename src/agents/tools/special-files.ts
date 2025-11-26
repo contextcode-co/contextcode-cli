@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import type { SpecialFile } from "@contextcode/types";
+import type { SpecialFile } from "src/types/src";
 
 const SPECIAL_FILE_PATTERNS = [
   { pattern: "CLAUDE.md", type: "claude-rules" as const },

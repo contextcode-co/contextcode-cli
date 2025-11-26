@@ -1,11 +1,11 @@
 import React from "react";
 import { render } from "ink";
-import { TaskSelector, type TaskListItem } from "@contextcode/tui";
 import { getTasks, type TaskFile } from "../shared/tasks";
 import { parseArgs } from "../utils/args.js";
 import { resolveWorkingDirectory } from "../utils/json.js";
 import { isInteractiveSession } from "../utils/prompt.js";
 import { copyToClipboard } from "../utils/clipboard.js";
+import { TaskListItem, TaskSelector } from "src/tui";
 
 const flagDefinitions = [{ name: "cwd", alias: "C", type: "string" as const }];
 

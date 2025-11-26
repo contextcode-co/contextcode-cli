@@ -1,7 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { UserConfigSchema, normalizeModelForProvider, type UserConfig } from "@contextcode/types";
+import { UserConfigSchema, normalizeModelForProvider, type UserConfig } from "src/types";
 
 export type { UserConfig };
 
@@ -43,7 +43,7 @@ export async function readUserConfig(): Promise<UserConfig> {
 
   const correction = tryAutoCorrectConfig(parsedJson);
   if (correction) {
-    console.warn(`[contextcode] ${correction.message}`);
+    console.warn(`${correction.message}`);
     await secureConfigPermissions(filePath);
     return correction.config;
   }
@@ -52,13 +52,13 @@ export async function readUserConfig(): Promise<UserConfig> {
 }
 
 export async function writeUserConfig(config: UserConfig) {
-  await persistConfig(config, (message) => console.warn(`[contextcode] ${message}`));
+  await persistConfig(config, (message) => console.warn(`${message}`));
 }
 
 export async function updateUserConfig(patch: Partial<UserConfig>) {
   const current = await readUserConfig();
   const merged = { ...current, ...patch } satisfies UserConfig;
-  return await persistConfig(merged, (message) => console.warn(`[contextcode] ${message}`));
+  return await persistConfig(merged, (message) => console.warn(`${message}`));
 }
 
 export function getConfigPath() {

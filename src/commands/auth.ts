@@ -1,7 +1,10 @@
 import { ArgError } from "../utils/args.js";
-import { listRegisteredProviders, getProviderAuthMethods, loadCredential } from "@contextcode/providers";
-import { runAuthLoginUI } from "@contextcode/tui";
+
 import { updateUserConfig, type UserConfig } from "../shared/user-config.js";
+import { listRegisteredProviders } from "src/providers/provider.js";
+import { getProviderAuthMethods } from "src/providers/authMethods.js";
+import { runAuthLoginUI } from "src/tui/index.js";
+import { loadCredential } from "src/providers/credentials.js";
 
 export async function runAuthCommand(args: string[]) {
   if (!args.length || args[0] === "--help" || args[0] === "-h") {

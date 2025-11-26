@@ -4,11 +4,13 @@ import { parseArgs, ArgError } from "../utils/args.js";
 import { isGitRepository } from "../utils/git.js";
 import { writeAgentLog } from "../shared/logs.js";
 import { readUserConfig } from "../shared/user-config.js";
-import { normalizeModelForProvider } from "@contextcode/types";
-import { buildRepositoryIndex, generateContextDocs } from "@contextcode/agents";
-import { loadProvider } from "@contextcode/providers";
+
 import { isInteractiveSession } from "../utils/prompt.js";
 import { CONTEXT_DIR } from "../shared/constants.js";
+import { normalizeModelForProvider } from "src/types/providers.js";
+import { buildRepositoryIndex } from "src/agents/tools/indexer.js";
+import { loadProvider } from "src/providers/provider.js";
+import { generateContextDocs } from "src/agents/context-generator.js";
 
 const flagDefinitions = [
   { name: "cwd", alias: "C", type: "string" as const },
@@ -57,7 +59,7 @@ export async function runInitCommand(argv: string[]) {
     }
     if (normalizedModel.reason === "fallback" && modelFlagInput) {
       console.warn(
-        `[contextcode] Model "${modelFlagInput}" is not valid for provider "${resolvedProvider}". Falling back to "${normalizedModel.model}".`
+        `Model "${modelFlagInput}" is not valid for provider "${resolvedProvider}". Falling back to "${normalizedModel.model}".`
       );
     }
     resolvedModel = normalizedModel.model;
@@ -66,10 +68,10 @@ export async function runInitCommand(argv: string[]) {
   // Check if git repository
   const isGit = isGitRepository(targetDir);
   if (!isGit) {
-    console.warn("[contextcode] Warning: Not a git repository. Some features may be limited.");
+    console.warn("Warning: Not a git repository. Some features may be limited.");
   }
 
-  console.log(`[contextcode] Indexing repository at ${targetDir}...`);
+  console.log(`Indexing repository at ${targetDir}...`);
 
   // Build the repository index using intelligent tools
   const index = await buildRepositoryIndex({
@@ -103,7 +105,7 @@ export async function runInitCommand(argv: string[]) {
   // Generate context docs with AI if provider is configured
   if (!flags["no-context-docs"]) {
     if (resolvedProvider && resolvedModel) {
-      console.log("\n[contextcode] Generating context documentation with AI...");
+      console.log("\nGenerating context documentation with AI...");
 
       try {
         const provider = await loadProvider(resolvedProvider, {
@@ -127,7 +129,7 @@ export async function runInitCommand(argv: string[]) {
         console.error("  The repository index was created successfully, but AI doc generation failed.");
       }
     } else {
-      console.log("\n[contextcode] Skipping context doc generation (no provider configured).");
+      console.log("\nSkipping context doc generation (no provider configured).");
       console.log("Run `contextcode auth login` and `contextcode set provider` to enable AI-powered docs.");
     }
   }

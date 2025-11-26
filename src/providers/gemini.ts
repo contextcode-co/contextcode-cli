@@ -1,8 +1,8 @@
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-import type { GeminiConfig } from "@contextcode/types";
-import { GeminiConfigSchema, type GeminiRequest, type GeminiResponse } from "@contextcode/types";
+import type { GeminiConfig } from "src/types/index.js";
+import { GeminiConfigSchema, type GeminiRequest, type GeminiResponse } from "src/types/index.js";
 
 import { registerAuthMethods } from "./authMethods.js";
 import { loadCredential, saveCredential, getCredentialsFilePath } from "./credentials.js";
@@ -12,7 +12,7 @@ import { registerProviderFactory } from "./provider.js";
 const PROVIDER_ID = "gemini";
 const API_KEY_PORTAL = "https://aistudio.google.com/app/apikey";
 const DEFAULT_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
-const DEFAULT_MODEL = "gemini-3-pro-preview";
+const DEFAULT_MODEL = "gemini-2.5-pro";
 
 registerProviderFactory(
 	PROVIDER_ID,

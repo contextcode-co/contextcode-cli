@@ -11,15 +11,9 @@ export default defineConfig({
   clean: true,
   dts: false,
   minify: false,
-  noExternal: [
-    "@contextcode/agents",
-    "@contextcode/providers",
-    "@contextcode/types",
-    "@contextcode/tui"
-  ],
   onSuccess: async () => {
     // Copy system-prompts to dist
-    const sourceDir = "packages/agents/src/system-prompts";
+    const sourceDir = "src/agents/system-prompts";
     const destDir = "dist/system-prompts";
 
     mkdirSync(destDir, { recursive: true });

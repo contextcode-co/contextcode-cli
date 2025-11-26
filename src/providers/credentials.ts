@@ -48,7 +48,7 @@ async function readCredentialFile(): Promise<CredentialFile> {
     if (error?.code === "ENOENT") {
       return { credentials: [] };
     }
-    console.warn(`[contextcode] Failed to read credentials file: ${error instanceof Error ? error.message : error}`);
+    console.warn(`Failed to read credentials file: ${error instanceof Error ? error.message : error}`);
   }
   return { credentials: [] };
 }

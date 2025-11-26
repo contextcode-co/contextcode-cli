@@ -7,12 +7,13 @@ import { parseArgs, ArgError } from "../utils/args.js";
 import { promptYesNo, isInteractiveSession } from "../utils/prompt.js";
 import { readUserConfig } from "../shared/user-config.js";
 import { createContextScaffold, resolveWorkingDirectory, ensureDirectoryExists } from "../utils/json.js";
-import { loadProvider } from "@contextcode/providers";
-import { normalizeModelForProvider } from "@contextcode/types";
-import { generateTaskPlanByAgent, buildRepositoryIndex } from "@contextcode/agents";
-import { DescriptionPrompt } from "@contextcode/tui";
 import { writeAgentLog } from "../shared/logs.js";
 import { CONTEXT_DIR } from "../shared/constants.js";
+import { normalizeModelForProvider } from "src/types/providers.js";
+import { buildRepositoryIndex } from "src/agents/tools/indexer.js";
+import { loadProvider } from "src/providers/provider.js";
+import { generateTaskPlanByAgent } from "src/agents/task-generator.js";
+import { DescriptionPrompt } from "src/tui/index.js";
 
 const flagDefinitions = [
   { name: "cwd", alias: "C", type: "string" as const },
@@ -52,7 +53,7 @@ export async function runGenerateTaskCommand(argv: string[]) {
   }
   if (normalizedModel.reason === "fallback" && requestedModel) {
     console.warn(
-      `[contextcode] Model "${requestedModel}" is not valid for provider "${providerName}". Falling back to "${normalizedModel.model}".`
+      `Model "${requestedModel}" is not valid for provider "${providerName}". Falling back to "${normalizedModel.model}".`
     );
   }
   const modelName = normalizedModel.model;
@@ -65,7 +66,7 @@ export async function runGenerateTaskCommand(argv: string[]) {
     throw new ArgError("A task description is required.");
   }
 
-  console.log("[contextcode] Analyzing repository...");
+  console.log("Analyzing repository...");
   const repoIndex = await buildRepositoryIndex({
     targetDir,
     ignorePatterns: [],

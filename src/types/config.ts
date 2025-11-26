@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProviderIdSchema, normalizeModelForProvider } from "./providers";
+import { ProviderIdSchema, normalizeModelForProvider } from "./providers.js";
 
 const BaseUserConfigSchema = z
   .object({

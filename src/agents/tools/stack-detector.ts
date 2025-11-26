@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import type { StackTechnology } from "@contextcode/types";
+import type { StackTechnology } from "src/types/src";
 
 type DetectionRule = {
   files: string[];

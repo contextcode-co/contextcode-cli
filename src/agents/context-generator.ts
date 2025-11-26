@@ -1,9 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AiProvider, Message } from "@contextcode/providers";
-import { buildRepositoryIndex, summarizeIndexForAI } from "./tools/indexer.js";
-import type { IndexerConfig } from "@contextcode/types";
+import type { AiProvider, Message } from "src/providers/index.js";
+import { buildRepositoryIndex, summarizeIndexForAI } from "./tools/indexer";
 
 export type ContextGeneratorInput = {
   targetDir: string;
@@ -124,7 +123,7 @@ export async function generateContextDocs(
   console.log("[context-generator] Building repository index...");
 
   // Build comprehensive index with ripgrep pattern matching
-  const indexConfig: IndexerConfig = {
+  const indexConfig = {
     targetDir: input.targetDir,
     includeTests: input.includeTests ?? false,
     ignorePatterns: [],
