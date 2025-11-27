@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import type { StackTechnology } from "src/types/src";
+import type { StackTechnology } from "../../types/index.js";
 
 type DetectionRule = {
   files: string[];

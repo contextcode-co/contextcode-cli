@@ -10,7 +10,7 @@ import type {
   StackTechnology,
   SpecialFile,
   CodeInsights
-} from "src/types/src/index.js";
+} from "src/types/index.js";
 import { detectStack } from "./stack-detector.js";
 import {
   shouldIgnorePath,

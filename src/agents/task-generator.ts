@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { AiProvider, Message } from "src/providers/src";
+import type { AiProvider, Message } from "../providers/index.js";
 
 const DOC_SNIPPET_LIMIT = 2000;
 const MAX_TASKS = 6;

@@ -53,7 +53,6 @@ async function handleLogin(_: string[]) {
   }
 
   await updateUserConfig(configPatch);
-  console.log(`\n✅ Authentication successful. Default provider set to ${selectedProvider?.title}.`);
 }
 
 function printAuthHelp() {

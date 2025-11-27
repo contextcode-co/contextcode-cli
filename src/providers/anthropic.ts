@@ -72,9 +72,6 @@ async function resolveAnthropicCredential(options: ProviderFactoryOptions = {}) 
 async function runInteractiveConsoleAuthorization() {
   console.log("Starting OAuth flow for Claude Pro/MAX...");
   const { url, verifier } = await authorize("max");
-  console.log("1. Open the following URL in a browser and complete the login:");
-  console.log(`   ${url}`);
-  console.log("2. Copy the final redirect URL fragment (code#state) and paste it below when prompted.\n");
   const code = await promptForInput("Paste authorization code (code#state): ");
   const credentials = await exchange(code, verifier);
   if (credentials.type !== "success" || !credentials.access) {

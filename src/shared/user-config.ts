@@ -68,7 +68,17 @@ export function getConfigPath() {
 async function persistConfig(config: Partial<UserConfig>, onAutoCorrect?: (message: string) => void) {
   const normalized = normalizeConfigForWrite(config, onAutoCorrect);
   const filePath = getConfigFilePathInternal();
+
+  // Ensure directory exists
+  const dir = path.dirname(filePath);
+  await fs.mkdir(dir, { recursive: true });
+
+  // Write config file
+  await fs.writeFile(filePath, JSON.stringify(normalized, null, 2), "utf8");
+
+  // Secure permissions
   await secureConfigPermissions(filePath);
+
   return normalized;
 }
 

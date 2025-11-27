@@ -7,6 +7,8 @@ import { runGenerateTaskCommand } from "./commands/generate-task.js";
 import { ArgError } from "./utils/args.js";
 import { runSetProviderCommand } from "./commands/set-provider.js";
 import { runTaskCommand } from "./commands/task.js";
+import { runInteractiveMode } from "./commands/interactive.js";
+import { isInteractiveSession } from "./utils/prompt.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version?: string };
@@ -17,9 +19,15 @@ async function main() {
     argv.shift();
   }
 
+  // If no arguments and in interactive terminal, start interactive mode
   if (argv.length === 0) {
-    printRootHelp();
-    return;
+    if (isInteractiveSession()) {
+      await runInteractiveMode();
+      return;
+    } else {
+      printRootHelp();
+      return;
+    }
   }
 
   if (argv.includes("--version") || argv.includes("-V")) {
