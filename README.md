@@ -8,6 +8,11 @@ contextcode is an AI-assisted CLI that indexes repositories, and produces execut
 
 ## Quick start
 
+Install with:
+```bash
+npm i -g contextcode-cli
+```
+
 ```bash
 ctx login     # Configure Anthropic or Gemini credentials
 ctx init      # Index the current repository
