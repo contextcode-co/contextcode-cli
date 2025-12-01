@@ -92,7 +92,8 @@ export const RepositoryIndexSchema = z.object({
   codeInsights: CodeInsightsSchema.optional(),
   ignoredPatterns: z.array(z.string()),
   totalFiles: z.number(),
-  indexedAt: z.string()
+  indexedAt: z.string(),
+  projectStructure: z.string()
 });
 
 export type RepositoryIndex = z.infer<typeof RepositoryIndexSchema>;

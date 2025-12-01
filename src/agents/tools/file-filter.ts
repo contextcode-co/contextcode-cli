@@ -1,7 +1,7 @@
 import path from "node:path";
 
 // Default patterns to ignore
-const DEFAULT_IGNORE_PATTERNS = [
+export const DEFAULT_IGNORE_PATTERNS: string[] = [
   // Build outputs
   "dist",
   "build",

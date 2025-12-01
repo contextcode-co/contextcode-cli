@@ -31,7 +31,26 @@ import {
 } from "./ripgrep-search.js";
 
 const MAX_FILE_SIZE = 500 * 1024; // 500KB
+
 const MAX_KEYWORD_CONTENT_SIZE = 50 * 1024; // 50KB for keyword extraction
+
+import { DEFAULT_IGNORE_PATTERNS } from "./file-filter";
+import { execSync } from "node:child_process";
+
+export function getProjectStructure(rootDir: string): string {
+  const ignoreArgs = DEFAULT_IGNORE_PATTERNS
+    .filter((p: string) => !p.includes("*") && !p.includes("."))
+    .map((p: string) => `-not -path \"*/${p}/*\"`)
+    .join(" ");
+
+  const findCmd = `find . -type d ${ignoreArgs}`;
+  try {
+    const output = execSync(findCmd, { cwd: rootDir, encoding: "utf8" });
+    return output.trim();
+  } catch (err) {
+    return "";
+  }
+}
 
 export async function buildRepositoryIndex(config: IndexerConfig): Promise<RepositoryIndex> {
   const { targetDir, ignorePatterns = [], maxFiles = 10000, includeTests = false } = config;
@@ -49,6 +68,8 @@ export async function buildRepositoryIndex(config: IndexerConfig): Promise<Repos
 
   console.log("[indexer] Scanning for special documentation files...");
   const specialFiles = await findSpecialFiles(targetDir);
+
+  const projectStructure = getProjectStructure(targetDir);
 
   console.log("[indexer] Scanning files...");
   const filterContext = {
@@ -165,7 +186,8 @@ export async function buildRepositoryIndex(config: IndexerConfig): Promise<Repos
     codeInsights,
     ignoredPatterns: allIgnorePatterns,
     totalFiles: processedCount,
-    indexedAt: new Date().toISOString()
+    indexedAt: new Date().toISOString(),
+    projectStructure
   };
 }
 
