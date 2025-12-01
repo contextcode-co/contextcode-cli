@@ -1,12 +1,10 @@
 # contextcode
 
-contextcode is an AI-assisted CLI that indexes repositories, and produces executable task plans for large language model (LLM) agents. The project is organized as a TypeScript monorepo with reusable packages for agents, provider integrations, shared types, and Ink-based TUIs.
+contextcode is an AI-assisted CLI that indexes repositories, and produces executable task plans for large language model (LLM) agents.
 
 ## Prerequisites
 
 - Node.js 18 or newer (the build targets Node 18 via `tsup`)
-- pnpm 10.15.1 (pinned in `packageManager`)
-- Git (recommended so the `init` command can log repository metadata)
 
 ## Quick start
 
@@ -17,20 +15,6 @@ ctx task      # Produce a scoped task plan from the context docs
 ```
 
 Generated artifacts live under `.contextcode/` inside the target repository (for example `.contextcode/context.md` and per-task folders).
-
-## Monorepo architecture
-
-```
-contextcode/
-├── src/                 # CLI entrypoint, commands, shared utilities
-├── packages/
-│   ├── agents/          # @contextcode/agents – AI task planner/orchestration logic
-│   ├── core/            # @contextcode/core – indexing, scaffolding, persistence helpers
-│   ├── providers/       # @contextcode/providers – provider registry, auth helpers, SDK glue
-│   ├── types/           # @contextcode/types – shared TypeScript types, Zod schemas, enums
-│   └── tui/             # @contextcode/tui – Ink/React components for interactive flows
-└── .contextcode/            # Generated docs and agent task outputs (created by `init`/`generate`)
-```
 
 ### CLI reference
 
