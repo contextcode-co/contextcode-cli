@@ -4,7 +4,7 @@ import path from "node:path";
 import { globby } from "globby";
 import { pathExists } from "fs-extra";
 
-const DEFAULT_TASKS_DIR = path.join(".context", "tasks");
+const DEFAULT_TASKS_DIR = path.join(".contextcode", "tasks");
 const MARKDOWN_GLOBS = ["**/*.md", "**/*.mdx"];
 const HEADING_REGEX = /^#\s+(.+)$/m;
 

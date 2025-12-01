@@ -1,14 +1,12 @@
 import process from "node:process";
 import { createRequire } from "node:module";
 import { runInitCommand } from "./commands/init.js";
-import { runAuthCommand } from "./commands/auth.js";
+import { runLoginCommand } from "./commands/auth.js";
 import { runModelCommand } from "./commands/set-model.js";
-import { runGenerateTaskCommand } from "./commands/generate-task.js";
+import { runGenerateContextCommand } from "./commands/generate-task.js";
 import { ArgError } from "./utils/args.js";
 import { runSetProviderCommand } from "./commands/set-provider.js";
 import { runTaskCommand } from "./commands/task.js";
-import { runInteractiveMode } from "./commands/interactive.js";
-import { isInteractiveSession } from "./utils/prompt.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version?: string };
@@ -21,13 +19,8 @@ async function main() {
 
   // If no arguments and in interactive terminal, start interactive mode
   if (argv.length === 0) {
-    if (isInteractiveSession()) {
-      await runInteractiveMode();
-      return;
-    } else {
-      printRootHelp();
-      return;
-    }
+    printRootHelp();
+    return;
   }
 
   if (argv.includes("--version") || argv.includes("-V")) {
@@ -48,11 +41,11 @@ async function main() {
     case "tasks":
       await runTaskCommand(rest);
       return;
-    case "generate":
-      await handleGenerate(rest);
+    case "task":
+      await runGenerateContextCommand(rest);
       return;
-    case "auth":
-      await runAuthCommand(rest);
+    case "login":
+      await runLoginCommand(rest);
       return;
     case "set":
       await handleSet(rest);
@@ -60,23 +53,6 @@ async function main() {
     default:
       throw new ArgError(`Unknown command: ${command}`);
   }
-}
-
-async function handleGenerate(args: string[]) {
-  if (args.length === 0) {
-    printGenerateHelp();
-    return;
-  }
-  const [subcommand, ...rest] = args;
-  if (subcommand === "--help" || subcommand === "-h") {
-    printGenerateHelp();
-    return;
-  }
-  if (subcommand === "task") {
-    await runGenerateTaskCommand(rest);
-    return;
-  }
-  throw new ArgError(`Unknown generate subcommand: ${subcommand}`);
 }
 
 async function handleSet(args: string[]) {
@@ -101,10 +77,6 @@ async function handleSet(args: string[]) {
 
 function printRootHelp() {
   console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode task [options]\n  contextcode generate task [options]\n  contextcode auth login\n  contextcode model\n  contextcode set provider\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
-}
-
-function printGenerateHelp() {
-  console.log("Usage:\n  contextcode generate task [options]\n\nUse --help within the command for detailed flags.");
 }
 
 function printSetHelp() {

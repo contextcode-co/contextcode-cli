@@ -174,12 +174,12 @@ Example usage:
 1. **`contextcode init`**:
    - Builds repository index via `buildRepositoryIndex()`
    - Optionally generates context docs via `generateContextDocs()` (two-phase)
-   - Outputs to `.context/` directory with agent logs
+   - Outputs to `.contextcode/` directory with agent logs
 
 2. **`contextcode generate task`**:
    - Reads existing index and context docs
    - Generates task plan via `generateTaskPlanByAgent()`
-   - Writes to `.context/tasks/<slug>/`
+   - Writes to `.contextcode/tasks/<slug>/`
 
 3. **Provider Resolution**:
    - Checks flags → environment variables → user config (`~/.contextcode/config.json`)
@@ -195,10 +195,10 @@ Example usage:
 
 ### Output Artifacts
 
-All generated files go to `.context/` in the target repository:
-- `.context/context.md`: Main context documentation
-- `.context/tasks/<slug>/`: Task-specific plans and overviews
-- `.context/.agent-log/`: JSON logs of agent executions
+All generated files go to `.contextcode/` in the target repository:
+- `.contextcode/context.md`: Main context documentation
+- `.contextcode/tasks/<slug>/`: Task-specific plans and overviews
+- `.contextcode/.agent-log/`: JSON logs of agent executions
 
 ## Important Implementation Details
 
@@ -325,7 +325,7 @@ Commands check for `.git/` directory and warn if not present. Some features may 
 
 ## Debugging Tips
 
-- Agent execution logs are written to `.context/.agent-log/` as JSON files
+- Agent execution logs are written to `.contextcode/.agent-log/` as JSON files
 - Use `pnpm dev -- <command> --help` to see detailed flag documentation
 - Check `~/.contextcode/credentials.json` and `~/.contextcode/config.json` for provider configuration issues
 - Set environment variables to override config for testing

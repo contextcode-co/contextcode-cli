@@ -13,7 +13,7 @@ import { normalizeModelForProvider } from "src/types/providers.js";
 import { buildRepositoryIndex } from "src/agents/tools/indexer.js";
 import { loadProvider } from "src/providers/provider.js";
 import { generateTaskPlanByAgent } from "src/agents/task-generator.js";
-import { DescriptionPrompt } from "src/tui/index.js";
+import { DescriptionPrompt } from "src/tui/components/DescriptionPrompt.js";
 
 const flagDefinitions = [
   { name: "cwd", alias: "C", type: "string" as const },
@@ -24,7 +24,7 @@ const flagDefinitions = [
   { name: "yes", alias: "y", type: "boolean" as const }
 ];
 
-export async function runGenerateTaskCommand(argv: string[]) {
+export async function runGenerateContextCommand(argv: string[]) {
   if (argv.includes("--help") || argv.includes("-h")) {
     printHelp();
     return;

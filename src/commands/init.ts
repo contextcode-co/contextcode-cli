@@ -81,7 +81,7 @@ export async function runInitCommand(argv: string[]) {
     includeTests: false
   });
 
-  // Create .context/ directory
+  // Create .contextcode/ directory
   const contextDir = path.join(targetDir, CONTEXT_DIR);
   await fs.mkdir(contextDir, { recursive: true });
 

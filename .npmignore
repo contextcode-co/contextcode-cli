@@ -7,7 +7,7 @@ tsconfig*.json
 tsup.config.ts
 
 # Context docs (generated)
-.context/
+.contextcode/
 
 # Development
 node_modules/

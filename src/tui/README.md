@@ -118,7 +118,7 @@ idle ──[/init]──────────> executing ──> streaming �
   - Cursor animation during typing
 
 ### TaskSelector
-- **Purpose**: Browse and select generated tasks from `.context/tasks/`
+- **Purpose**: Browse and select generated tasks from `.contextcode/tasks/`
 - **Features**:
   - Lists all generated tasks with labels and paths
   - Searchable (if more than 7 tasks)

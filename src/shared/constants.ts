@@ -1,1 +1,1 @@
-export const CONTEXT_DIR = ".context";
+export const CONTEXT_DIR = ".contextcode";

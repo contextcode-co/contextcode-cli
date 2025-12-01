@@ -64,7 +64,7 @@ turbo/
 
 # Generated context docs artifacts & agent logs
 contextcode
-.context
+.contextcode
 
 # Misc
 *.pem

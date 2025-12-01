@@ -34,9 +34,8 @@ export function DescriptionPrompt({
           <TextInput value={value} onChange={setValue} onSubmit={handleSubmit} placeholder={placeholder} />
         </Box>
       </Box>
-      <Box justifyContent="space-between" marginTop={1}>
-        <Text color="blue">Provider: {provider || "(not set)"}</Text>
-        <Text color="cyan">Model: {model || "(not set)"}</Text>
+      <Box paddingX={1}>
+        <Text color="cyan">model: {model || "(not set)"}</Text>
       </Box>
     </Box>
   );

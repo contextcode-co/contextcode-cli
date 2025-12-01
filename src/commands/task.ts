@@ -35,7 +35,7 @@ export async function runTaskCommand(argv: string[], options: RunTaskCommandOpti
   const fetchTasks = options.loadTasks ?? getTasks;
   const tasks = await fetchTasks(baseDir);
   if (!tasks.length) {
-    console.log("No tasks found. Add markdown files under .context/tasks.");
+    console.log("No tasks found. Add markdown files under .contextcode/tasks.");
     return;
   }
 
@@ -80,5 +80,5 @@ async function runTaskSelector(tasks: TaskFile[]) {
 }
 
 function printHelp() {
-  console.log(`Usage: contextcode task [options]\n\nList available tasks from .context/tasks and copy the selected task to your clipboard.\n\nOptions:\n  -C, --cwd <path>  Directory to scan for tasks\n  -h, --help        Show this help text`);
+  console.log(`Usage: contextcode task [options]\n\nList available tasks from .contextcode/tasks and copy the selected task to your clipboard.\n\nOptions:\n  -C, --cwd <path>  Directory to scan for tasks\n  -h, --help        Show this help text`);
 }

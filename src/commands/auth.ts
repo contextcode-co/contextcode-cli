@@ -6,22 +6,7 @@ import { getProviderAuthMethods } from "src/providers/authMethods.js";
 import { runAuthLoginUI } from "src/tui/index.js";
 import { loadCredential } from "src/providers/credentials.js";
 
-export async function runAuthCommand(args: string[]) {
-  if (!args.length || args[0] === "--help" || args[0] === "-h") {
-    printAuthHelp();
-    return;
-  }
-
-  const [subcommand, ...rest] = args;
-  if (subcommand === "login") {
-    await handleLogin(rest);
-    return;
-  }
-
-  throw new ArgError(`Unknown auth subcommand: ${subcommand}`);
-}
-
-async function handleLogin(_: string[]) {
+export async function runLoginCommand(_: string[]) {
   const providers = listRegisteredProviders().filter((provider) => provider.login);
   if (!providers.length) {
     throw new Error("No providers available for interactive login.");

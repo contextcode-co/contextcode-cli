@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "node:path";
 import fsExtra from "fs-extra";
 
-const CONTEXT_DIR = ".context";
+const CONTEXT_DIR = ".contextcode";
 
 export type ContextScaffold = {
   contextDocsDir: string;

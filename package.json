@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "contextcode": "bin/contextcode.js"
+    "ctx": "bin/contextcode.js"
   },
   "scripts": {
     "build": "tsup --config tsup.config.ts",
