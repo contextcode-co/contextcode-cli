@@ -76,11 +76,11 @@ async function handleSet(args: string[]) {
 }
 
 function printRootHelp() {
-  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  contextcode init [path] [options]\n  contextcode task [options]\n  contextcode generate task [options]\n  contextcode auth login\n  contextcode model\n  contextcode set provider\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
+  console.log(`contextcode ${pkg.version ?? ""}\n\nUsage:\n  ctx init [path] [options]\n  ctx task [options]\n  ctx login\n  ctx set model\n  ctx set provider\n\nGlobal flags:\n  --version, -V  Show version\n  --help, -h     Show this help text`);
 }
 
 function printSetHelp() {
-  console.log("Usage:\n  contextcode set provider\n\nRun an interactive TUI to pick which credentialed provider should be used by default.");
+  console.log("Usage:\n  ctx set provider\n\nRun an interactive TUI to pick which credentialed provider should be used by default.");
 }
 
 main().catch((err) => {
