@@ -71,6 +71,32 @@ export async function runInitCommand(argv: string[]) {
     console.warn("Warning: Not a git repository. Some features may be limited.");
   }
 
+  // Detect AI agent in use
+  const fsPath = async (p: string) => {
+    try {
+      await fs.stat(path.join(targetDir, p));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  let detectedAgent: string | undefined;
+  if (await fsPath("CLAUDE.md")) {
+    detectedAgent = "Claude Code";
+  } else if (await fsPath(".cursorrules")) {
+    detectedAgent = "Cursor";
+  } else if (await fsPath(".github/copilot-instructions")) {
+    detectedAgent = "Copilot";
+  } else if (await fsPath("GEMINI.md")) {
+    detectedAgent = "Gemini";
+  }
+
+  if (detectedAgent) {
+    console.log(`Detected AI agent: ${detectedAgent}`);
+  } else {
+    console.log("No specific AI agent detected.");
+  }
+
   console.log(`Indexing repository at ${targetDir}...`);
 
   // Build the repository index using intelligent tools
@@ -90,6 +116,9 @@ export async function runInitCommand(argv: string[]) {
   console.log(`  Workspace packages: ${index.workspacePackages.length}`);
   console.log(`  Indexed files: ${index.totalFiles}`);
   console.log(`  Important modules: ${index.modules.length}`);
+  if (detectedAgent) {
+    console.log(`  AI agent: ${detectedAgent}`);
+  }
 
   // Write agent log
   const agentLogDir = path.join(contextDir, ".agent-log");
@@ -99,7 +128,8 @@ export async function runInitCommand(argv: string[]) {
     targetDir: path.relative(process.cwd(), targetDir),
     detectedStack: index.detectedStack.map(s => s.name),
     totalFiles: index.totalFiles,
-    workspacePackages: index.workspacePackages.length
+    workspacePackages: index.workspacePackages.length,
+    aiAgent: detectedAgent
   });
 
   // Generate context docs with AI if provider is configured
