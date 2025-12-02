@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from "react";
-import {Box, render} from "ink";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, render } from "ink";
 import clipboard from "clipboardy";
-import {PromptBox, Step} from "./PromptBox.js";
-import {SelectInput} from "./SelectInput.js";
-import {TextInput} from "./TextInput.js";
+import { PromptBox, Step } from "../layouts/PromptBox.js";
+import { SelectInput } from "../primitives/SelectInput.js";
+import { TextInput } from "../primitives/TextInput.js";
 
 type AuthMethod = {
   label: string;
@@ -15,11 +15,11 @@ type AuthMethod = {
 };
 
 type AuthLoginFlowProps = {
-  providers: Array<{id: string; title: string; description: string}>;
+  providers: Array<{ id: string; title: string; description: string }>;
   onProviderSelect: (providerId: string) => Promise<{
     methods: AuthMethod[];
   }>;
-  onComplete: (result: {providerId: string; methodIndex: number}) => void;
+  onComplete: (result: { providerId: string; methodIndex: number }) => void;
 };
 
 export function AuthLoginFlow({
@@ -27,23 +27,16 @@ export function AuthLoginFlow({
   onProviderSelect,
   onComplete,
 }: AuthLoginFlowProps) {
-  const [stage, setStage] = useState<"provider" | "method" | "code">(
-    "provider"
-  );
+  const [stage, setStage] = useState<"provider" | "method" | "code">("provider");
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [selectedProviderTitle, setSelectedProviderTitle] =
-    useState<string>("");
-  const [methods, setMethods] = useState<any[]>([]);
+  const [selectedProviderTitle, setSelectedProviderTitle] = useState<string>("");
+  const [methods, setMethods] = useState<AuthMethod[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<number | null>(null);
   const [selectedMethodLabel, setSelectedMethodLabel] = useState<string>("");
   const [authUrl, setAuthUrl] = useState<string>("");
   const [authInstructions, setAuthInstructions] = useState<string>("");
-  const [authCallback, setAuthCallback] = useState<
-    ((code: string) => Promise<void>) | null
-  >(null);
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
-    "idle"
-  );
+  const [authCallback, setAuthCallback] = useState<((code: string) => Promise<void>) | null>(null);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const lastCopiedUrl = useRef<string | null>(null);
 
   useEffect(() => {
@@ -84,7 +77,7 @@ export function AuthLoginFlow({
   const steps: Step[] = [];
 
   if (stage === "provider") {
-    steps.push({type: "active", label: "Select provider"});
+    steps.push({ type: "active", label: "Select provider" });
   } else {
     steps.push({
       type: "complete",
@@ -94,7 +87,7 @@ export function AuthLoginFlow({
   }
 
   if (stage === "method") {
-    steps.push({type: "active", label: "Login method"});
+    steps.push({ type: "active", label: "Login method" });
   } else if (selectedMethod !== null) {
     steps.push({
       type: "complete",
@@ -112,15 +105,15 @@ export function AuthLoginFlow({
 
   if (stage === "code") {
     if (authUrl) {
-      steps.push({type: "info", label: "Go to:", value: authUrl});
+      steps.push({ type: "info", label: "Go to:", value: authUrl });
       if (copyStatusMessage) {
-        steps.push({type: "pending", label: copyStatusMessage});
+        steps.push({ type: "pending", label: copyStatusMessage });
       }
     }
     if (authInstructions) {
-      steps.push({type: "pending", label: authInstructions});
+      steps.push({ type: "pending", label: authInstructions });
     }
-    steps.push({type: "active", label: "Paste the authorization code here:"});
+    steps.push({ type: "active", label: "Paste the authorization code here:" });
   }
 
   let activeContent: React.ReactNode = null;
@@ -196,13 +189,13 @@ export function AuthLoginFlow({
 }
 
 export async function runAuthLoginUI(
-  providers: Array<{id: string; title: string; description: string}>,
+  providers: Array<{ id: string; title: string; description: string }>,
   onProviderSelect: (providerId: string) => Promise<{
     methods: AuthMethod[];
   }>
-): Promise<{providerId: string; methodIndex: number}> {
+): Promise<{ providerId: string; methodIndex: number }> {
   return new Promise((resolve) => {
-    const {unmount} = render(
+    const { unmount } = render(
       <AuthLoginFlow
         providers={providers}
         onProviderSelect={onProviderSelect}

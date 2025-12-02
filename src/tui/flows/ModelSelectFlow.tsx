@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { render, Box } from "ink";
-import { PromptBox, Step } from "./PromptBox.js";
-import { SelectInput } from "./SelectInput.js";
+import React from "react";
+import { render } from "ink";
+import { PromptBox, Step } from "../layouts/PromptBox.js";
+import { SelectInput } from "../primitives/SelectInput.js";
 
 type ModelOption = {
   id: string;
@@ -16,15 +16,15 @@ type ModelSelectFlowProps = {
 };
 
 export function ModelSelectFlow({ currentModel, models, onComplete }: ModelSelectFlowProps) {
-  const currentModelName = models.find(m => m.id === currentModel)?.name || "(not set)";
-  
+  const currentModelName = models.find((m) => m.id === currentModel)?.name || "(not set)";
+
   const steps: Step[] = [
     {
       type: "complete",
       label: "Current model",
-      value: currentModelName
+      value: currentModelName,
     },
-    { type: "active", label: "Select default model" }
+    { type: "active", label: "Select default model" },
   ];
 
   const handleSelect = (modelId: string) => {
@@ -37,7 +37,7 @@ export function ModelSelectFlow({ currentModel, models, onComplete }: ModelSelec
         options={models.map((m) => ({
           label: m.name,
           value: m.id,
-          description: m.description
+          description: m.description,
         }))}
         onSelect={handleSelect}
       />
@@ -45,10 +45,7 @@ export function ModelSelectFlow({ currentModel, models, onComplete }: ModelSelec
   );
 }
 
-export async function runModelSelectUI(
-  currentModel: string | null,
-  models: ModelOption[]
-): Promise<string> {
+export async function runModelSelectUI(currentModel: string | null, models: ModelOption[]): Promise<string> {
   return new Promise((resolve) => {
     const { unmount } = render(
       <ModelSelectFlow
