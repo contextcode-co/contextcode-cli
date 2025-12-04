@@ -14,9 +14,10 @@ export type TaskListItem = {
 export type TaskSelectorProps = {
   tasks: TaskListItem[];
   onSelect: (task: TaskListItem) => void;
+  onDelete?: (task: TaskListItem) => void;
 };
 
-export function TaskSelector({ tasks, onSelect }: TaskSelectorProps) {
+export function TaskSelector({ tasks, onSelect, onDelete }: TaskSelectorProps) {
   if (!tasks.length) {
     return (
       <PromptBox
@@ -42,7 +43,7 @@ export function TaskSelector({ tasks, onSelect }: TaskSelectorProps) {
           label: "Select a task"
         }
       ]}
-      footer="Use ↑/↓ to navigate, Enter to copy"
+      footer={onDelete ? "↑/↓ navigate • Enter copy • Backspace delete" : "Use ↑/↓ to navigate, Enter to copy"}
     >
       <SelectInput
         options={tasks.map((task, index) => ({
@@ -56,6 +57,12 @@ export function TaskSelector({ tasks, onSelect }: TaskSelectorProps) {
             onSelect(selected);
           }
         }}
+        onDelete={onDelete ? (value) => {
+          const selected = tasks[Number(value)];
+          if (selected) {
+            onDelete(selected);
+          }
+        } : undefined}
         showSearch={tasks.length > 7}
         searchPlaceholder="Search tasks"
       />

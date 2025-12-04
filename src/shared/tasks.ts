@@ -15,6 +15,23 @@ export type TaskFile = {
   content: string;
 };
 
+export async function deleteTask(absolutePath: string): Promise<void> {
+  const taskDir = path.dirname(absolutePath);
+  const tasksParentDir = path.dirname(taskDir);
+  
+  // Check if we're deleting a task folder (contains the task file)
+  // If the parent folder only contains this one file, delete the whole folder
+  const filesInDir = await fs.readdir(taskDir);
+  
+  if (filesInDir.length <= 2) {
+    // If only 1-2 files (the task file + maybe overview), delete the whole task folder
+    await fs.rm(taskDir, { recursive: true, force: true });
+  } else {
+    // Otherwise just delete the specific file
+    await fs.unlink(absolutePath);
+  }
+}
+
 export async function getTasks(baseDir = process.cwd()): Promise<TaskFile[]> {
   const tasksDir = path.resolve(baseDir, DEFAULT_TASKS_DIR);
   const hasTasksDir = await pathExists(tasksDir);

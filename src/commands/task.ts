@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "ink";
-import { getTasks, type TaskFile } from "../shared/tasks";
+import { getTasks, deleteTask, type TaskFile } from "../shared/tasks";
 import { parseArgs } from "../utils/args.js";
 import { resolveWorkingDirectory } from "../utils/json.js";
 import { isInteractiveSession } from "../utils/prompt.js";
@@ -9,11 +9,17 @@ import { TaskListItem, TaskSelector } from "src/tui";
 
 const flagDefinitions = [{ name: "cwd", alias: "C", type: "string" as const }];
 
+export type TaskSelectorResult = {
+  action: "select" | "delete";
+  task: TaskFile;
+};
+
 export type RunTaskCommandOptions = {
   interactive?: boolean;
   loadTasks?: (cwd: string) => Promise<TaskFile[]>;
-  selectTask?: (tasks: TaskFile[]) => Promise<TaskFile | undefined>;
+  selectTask?: (tasks: TaskFile[]) => Promise<TaskSelectorResult | undefined>;
   copyTask?: (content: string) => Promise<void>;
+  deleteTask?: (absolutePath: string) => Promise<void>;
   cwd?: string;
 };
 
@@ -40,20 +46,34 @@ export async function runTaskCommand(argv: string[], options: RunTaskCommandOpti
   }
 
   const selectTask = options.selectTask ?? runTaskSelector;
-  const selectedTask = await selectTask(tasks);
-  if (!selectedTask) {
+  const result = await selectTask(tasks);
+  if (!result) {
     console.log("Task selection cancelled.");
     return;
   }
 
+  if (result.action === "delete") {
+    const removeTask = options.deleteTask ?? deleteTask;
+    await removeTask(result.task.absolutePath);
+    console.log(`Deleted task: ${result.task.label} (${result.task.relativePath})`);
+    
+    // Reload and continue selection if there are more tasks
+    const remainingTasks = await fetchTasks(baseDir);
+    if (remainingTasks.length > 0) {
+      // Re-run the command to show remaining tasks
+      return runTaskCommand(argv, options);
+    }
+    return;
+  }
+
   const copyTask = options.copyTask ?? copyToClipboard;
-  await copyTask(selectedTask.content);
-  console.log(`Copied ${selectedTask.label} (${selectedTask.relativePath}) to the clipboard.`);
+  await copyTask(result.task.content);
+  console.log(`Copied ${result.task.label} (${result.task.relativePath}) to the clipboard.`);
 }
 
 async function runTaskSelector(tasks: TaskFile[]) {
-  return new Promise<TaskFile | undefined>((resolve) => {
-    let chosen: TaskFile | undefined;
+  return new Promise<TaskSelectorResult | undefined>((resolve) => {
+    let result: TaskSelectorResult | undefined;
     const listItems: TaskListItem[] = tasks.map((task) => ({
       label: task.label,
       description: task.relativePath,
@@ -66,7 +86,14 @@ async function runTaskSelector(tasks: TaskFile[]) {
         onSelect: (task) => {
           const index = listItems.indexOf(task);
           if (index >= 0) {
-            chosen = tasks[index];
+            result = { action: "select", task: tasks[index] };
+          }
+          unmount();
+        },
+        onDelete: (task) => {
+          const index = listItems.indexOf(task);
+          if (index >= 0) {
+            result = { action: "delete", task: tasks[index] };
           }
           unmount();
         }
@@ -74,7 +101,7 @@ async function runTaskSelector(tasks: TaskFile[]) {
     );
 
     waitUntilExit().finally(() => {
-      resolve(chosen);
+      resolve(result);
     });
   });
 }
