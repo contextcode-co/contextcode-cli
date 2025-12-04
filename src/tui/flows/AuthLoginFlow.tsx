@@ -37,6 +37,7 @@ export function AuthLoginFlow({
   const [authInstructions, setAuthInstructions] = useState<string>("");
   const [authCallback, setAuthCallback] = useState<((code: string) => Promise<void>) | null>(null);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const [error, setError] = useState<string | null>(null);
   const lastCopiedUrl = useRef<string | null>(null);
 
   useEffect(() => {
@@ -113,6 +114,9 @@ export function AuthLoginFlow({
     if (authInstructions) {
       steps.push({ type: "pending", label: authInstructions });
     }
+    if (error) {
+      steps.push({ type: "pending", label: `⚠️  ${error}` });
+    }
     steps.push({ type: "active", label: "Paste the authorization code here:" });
   }
 
@@ -170,13 +174,29 @@ export function AuthLoginFlow({
   }
 
   async function handleCodeSubmit(code: string) {
-    if (authCallback) {
-      await authCallback(code);
+    const trimmedCode = code.trim();
+    
+    // Validate empty input
+    if (!trimmedCode) {
+      setError("Authorization code is required. Please paste the code and try again.");
+      return;
     }
-    onComplete({
-      providerId: selectedProvider!,
-      methodIndex: selectedMethod!,
-    });
+
+    // Clear any previous error
+    setError(null);
+
+    try {
+      if (authCallback) {
+        await authCallback(trimmedCode);
+      }
+      onComplete({
+        providerId: selectedProvider!,
+        methodIndex: selectedMethod!,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Invalid authorization code. Please try again.";
+      setError(message);
+    }
   }
 
   return (
