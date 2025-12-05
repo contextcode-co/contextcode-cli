@@ -10,11 +10,12 @@ export type SelectOption = {
 export type SelectInputProps = {
   options: SelectOption[];
   onSelect: (value: string) => void;
+  onDelete?: (value: string) => void;
   showSearch?: boolean;
   searchPlaceholder?: string;
 };
 
-export function SelectInput({ options, onSelect, showSearch = false, searchPlaceholder = "Search:" }: SelectInputProps) {
+export function SelectInput({ options, onSelect, onDelete, showSearch = false, searchPlaceholder = "Search:" }: SelectInputProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -59,6 +60,10 @@ export function SelectInput({ options, onSelect, showSearch = false, searchPlace
       } else if (key.return) {
         if (filteredOptions[selectedIndex]) {
           onSelect(filteredOptions[selectedIndex].value);
+        }
+      } else if ((key.backspace || key.delete) && onDelete) {
+        if (filteredOptions[selectedIndex]) {
+          onDelete(filteredOptions[selectedIndex].value);
         }
       }
     }
